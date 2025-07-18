@@ -23,7 +23,7 @@ RUN composer global require \
     && ln -s /root/.composer/vendor/bin/phpmd /usr/local/bin/phpmd \
     && ln -s /root/.composer/vendor/bin/phpcbf /usr/local/bin/phpcbf
 
-COPY ./Docker/entrypoint.sh /usr/local/bin/laravel-setup.sh
+COPY entrypoint.sh /usr/local/bin/laravel-setup.sh
 RUN chmod +x /usr/local/bin/laravel-setup.sh
 
 ENTRYPOINT ["/usr/local/bin/laravel-setup.sh"]
