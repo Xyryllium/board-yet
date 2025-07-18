@@ -1,0 +1,73 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Application\User\Services\UserService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class AuthController extends Controller
+{
+    public function __construct(private UserService $userService)
+    {
+    }
+
+    public function register(Request $request)
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => [
+                        'required',
+                        'string',
+                        'min:8',
+                        // Minimum length
+                        'regex:/[a-z]/',
+                        // At least one lowercase letter
+                        'regex:/[A-Z]/',
+                        // At least one uppercase letter
+                        'regex:/[0-9]/',
+                        // At least one number
+                        'regex:/[@$!%*#?&]/',
+                        // At least one special character
+                    ],
+        ]);
+
+        $user = $this->userService->create($data);
+
+        $token = $user->createToken('api-token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'User created successfully',
+            'token' => $token,
+        ]);
+    }
+
+    public function login(Request $request)
+    {
+        $credentials = $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+
+        if(!Auth::attempt($credentials)){
+            return response()->json(['Invalid credentials'], 401);
+        }
+
+        $user = Auth::user();
+
+        $token = $user->createToken('api-token')->plainTextToken;
+
+        return response()->json([
+            'user' => $user,
+            'token' => $token,
+        ]);
+    }
+
+    public function logout(Request $request)
+    {
+        $request->user()->tokens()->delete();
+
+        return response()->json(['message' => 'Logged out']);
+    }
+}
