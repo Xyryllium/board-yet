@@ -21,6 +21,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'current_organization_id',
     ];
 
     /**
@@ -44,5 +45,17 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function organizations()
+    {
+        return $this->belongsToMany(Organization::class)
+                    ->withPivot('role')
+                    ->withTimestamps();
+    }
+
+     public function currentOrganization()
+    {
+        return $this->belongsTo(Organization::class, 'current_organization_id');
     }
 }
