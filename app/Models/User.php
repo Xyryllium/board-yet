@@ -11,7 +11,9 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens;
+    use HasFactory;
+    use Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -55,7 +57,7 @@ class User extends Authenticatable
                     ->withTimestamps();
     }
 
-     public function currentOrganization()
+    public function currentOrganization()
     {
         return $this->belongsTo(Organization::class, 'current_organization_id');
     }

@@ -5,6 +5,7 @@ RUN apt-get update && apt-get install -y \
     libxslt-dev \
     zip unzip curl git \
     ca-certificates \
+    postgresql-client \
     && docker-php-ext-install pdo_pgsql pgsql xsl
 
 

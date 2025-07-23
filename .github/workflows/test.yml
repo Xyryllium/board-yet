@@ -15,6 +15,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Copy .env.testing to .env
+        run: cp .env.testing .env
+
+      - name: Generate Laravel App Key
+        run: docker compose run --rm app php artisan key:generate
+
       - name: Set up Docker Compose
         run: |
           docker compose up -d --build
@@ -22,11 +28,17 @@ jobs:
       - name: Wait for services
         run: sleep 15
 
+      - name: Check app container status
+        run: docker compose ps -a
+
+      - name: App container logs
+        run: docker compose logs app
+
       - name: Run PHPStan
         run: docker compose exec -T app phpstan analyse app
 
       - name: Run PHPCS
-        run: docker compose exec -T app phpcs --standard=phpcs.xml app
+        run: docker compose exec -T app phpcs --standard=/var/www/phpcs.xml app
 
       - name: Run PHPMD
         run: docker compose exec -T app phpmd app text phpmd.xml

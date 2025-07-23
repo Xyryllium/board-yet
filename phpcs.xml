@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<ruleset name="BoardYet Custom Ruleset">
+    <description>Custom rules for my Board Yet PHP project</description>
+
+    <!-- Base Standard -->
+    <rule ref="PSR12" />
+    
+    <!-- Excluded Rules -->
+    <exclude name="Squiz.Commenting.FileComment" />
+    <exclude name="Generic.Commenting.TodoComment" />
+    <exclude name="Generic.Commenting.InlineComment.NoFullStop" />
+    <exclude name="Generic.Commenting.FunctionComment.Missing" />
+    <exclude name="PEAR.Commenting.ClassComment.Missing" />
+    <exclude name="Squiz.WhiteSpace.FunctionClosingBrace.SpaceBeforeClose" />
+    <exclude name="Generic.Files.OneObjectStructurePerFile" />
+</ruleset>

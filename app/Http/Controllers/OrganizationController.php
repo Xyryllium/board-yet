@@ -10,7 +10,6 @@ class OrganizationController extends Controller
 {
     public function __construct(private OrganizationService $organizationService)
     {
-        
     }
 
     public function store(Request $request): JsonResponse
