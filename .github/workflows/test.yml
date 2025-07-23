@@ -32,7 +32,7 @@ jobs:
 
       - name: Set up Docker Compose
         run: |
-          docker-compose up -d
+          docker compose up -d
 
       - name: Wait for services
         run: sleep 15
@@ -47,13 +47,13 @@ jobs:
         run: docker compose exec app phpmd app text phpmd.xml
 
       - name: Run Laravel Migrations
-        run: docker-compose exec -T app php artisan migrate --force
+        run: docker compose exec -T app php artisan migrate --force
 
       - name: Run Laravel Tests
-        run: docker-compose exec -T app php artisan test
+        run: docker compose exec -T app php artisan test
 
       - name: Shutdown Docker Compose
         if: always()
-        run: docker-compose down
+        run: docker compose down
 
     
