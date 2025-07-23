@@ -15,6 +15,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Copy .env.testing to .env
+        run: cp .env.testing .env
+
+      - name: Generate Laravel App Key
+        run: docker compose run --rm app php artisan key:generate
+
       - name: Set up Docker Compose
         run: |
           docker compose up -d --build
