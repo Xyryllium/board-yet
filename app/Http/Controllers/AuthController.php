@@ -5,11 +5,11 @@ namespace App\Http\Controllers;
 use App\Application\User\Services\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Contracts\Auth\Factory as AuthFactory;
 
 class AuthController extends Controller
 {
-    public function __construct(private UserService $userService)
+    public function __construct(private UserService $userService, private AuthFactory $auth)
     {
     }
 
@@ -51,11 +51,11 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        if(!Auth::attempt($credentials)){
+        if ($this->auth->guard()->attempt($credentials)) {
             return response()->json(['Invalid credentials'], 401);
         }
 
-        $user = Auth::user();
+        $user = $this->auth->guard()->user();
 
         $token = $user->createToken('api-token')->plainTextToken;
 

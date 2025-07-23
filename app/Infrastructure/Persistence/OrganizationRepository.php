@@ -7,8 +7,12 @@ use App\Models\Organization;
 
 class OrganizationRepository implements OrganizationRepositoryInterface
 {
+    public function __construct(private Organization $organization)
+    {
+    }
+
     public function save(array $data): Organization
     {
-        return Organization::create($data);
+        return $this->organization->create($data);
     }
 }
