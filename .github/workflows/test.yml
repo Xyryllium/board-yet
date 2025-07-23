@@ -32,7 +32,7 @@ jobs:
         run: docker compose exec -T app phpstan analyse app
 
       - name: Run PHPCS
-        run: docker compose exec -T app phpcs --standard=phpcs.xml app
+        run: docker compose exec -T app phpcs --standard=/var/www/phpcs.xml app
 
       - name: Run PHPMD
         run: docker compose exec -T app phpmd app text phpmd.xml
