@@ -1,13 +1,10 @@
 #!/bin/bash
 set -e
 
-TOOL_COMMANDS=("phpstan" "phpmd" "phpcs" "artisan test" "artisan tinker")
-for TOOL in "${TOOL_COMMANDS[@]}"; do
-  if echo "$*" | grep -q "$TOOL"; then
-    echo "Running tool: $TOOL — skipping Laravel app bootstrap..."
+if echo "$*" | grep -qE "php(cs|md|stan)|artisan (test|tinker|key:generate|config:clear|route:clear|migrate)"; then
+    echo "Running safe tool command — skipping Laravel app bootstrap..."
     exec "$@"
-  fi
-done
+fi
 
 if [ ! -f "vendor/autoload.php" ]; then
     composer install --no-progress --no-interaction
