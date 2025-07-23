@@ -15,6 +15,8 @@ COPY . .
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader
+
 RUN composer global require \
     squizlabs/php_codesniffer \
     phpmd/phpmd \

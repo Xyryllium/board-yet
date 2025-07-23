@@ -49,7 +49,7 @@ class AuthController extends Controller
         $credentials = $request->validate([
             'email' => 'required|email',
             'password' => 'required',
-        ]);  
+        ]);
 
         if ($this->auth->guard()->attempt($credentials)) {
             return response()->json(['Invalid credentials'], 401);
