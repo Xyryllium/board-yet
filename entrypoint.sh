@@ -1,6 +1,11 @@
 #!/bin/bash
 set -e
 
+if echo "$*" | grep -qE "php(cs|md|stan)|artisan (test|tinker|key:generate|config:clear|route:clear|migrate)"; then
+    echo "Running safe tool command — skipping Laravel app bootstrap..."
+    exec "$@"
+fi
+
 if [ ! -f "vendor/autoload.php" ]; then
     composer install --no-progress --no-interaction
 fi
