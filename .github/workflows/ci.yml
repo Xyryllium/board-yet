@@ -103,8 +103,22 @@ jobs:
       - name: Copy .env.testing
         run: cp .env.testing .env
 
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            composer-
+
       - name: Start Services
         run: docker compose up -d database app
+
+      - name: Install Composer Dependencies
+        run: |
+            if [ ! -d vendor ]; then
+                docker compose exec -T app composer install --no-interaction --prefer-dist --no-progress
+            fi
 
       - name: Generate Laravel App Key
         run: docker compose exec -T app php artisan key:generate
