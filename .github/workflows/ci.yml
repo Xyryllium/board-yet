@@ -88,20 +88,6 @@ jobs:
   test:
     needs: build
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:14
-        env:
-          POSTGRES_DB: board_yet
-          POSTGRES_USER: root
-          POSTGRES_PASSWORD: secret
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U root"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
 
     steps:
       - uses: actions/checkout@v4
@@ -117,11 +103,18 @@ jobs:
       - name: Copy .env.testing
         run: cp .env.testing .env
 
+      - name: Start Services
+        run: docker compose up -d database app
+
       - name: Generate Laravel App Key
-        run: docker run --rm -v ${{ github.workspace }}:/app --workdir=/app board-yet:${{ github.sha }} php artisan key:generate
+        run: docker compose exec -T app php artisan key:generate
 
-      - name: Run Laravel Migrations
-        run: docker run --rm -v ${{ github.workspace }}:/app --workdir=/app board-yet:${{ github.sha }} php artisan migrate --force
+      - name: Laravel Migrations
+        run: docker compose exec -T app php artisan migrate --force
 
-      - name: Run Laravel Tests
-        run: docker run --rm -v ${{ github.workspace }}:/app --workdir=/app board-yet:${{ github.sha }} php artisan test
+      - name: Laravel Tests
+        run: docker compose exec -T app php artisan test
+
+      - name: Shutdown
+        if: always()
+        run: docker compose down
