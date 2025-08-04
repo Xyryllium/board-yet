@@ -117,14 +117,6 @@ jobs:
             -p 5432:5432 \
             postgres:15
 
-      - name: Wait for DB
-        run: |
-          echo "Waiting for DB..."
-          for i in {1..10}; do
-            docker exec pg pg_isready && break
-            sleep 3
-          done
-
       - name: Run Migrations and Tests
         run: |
           docker run --rm \
@@ -141,4 +133,4 @@ jobs:
 
       - name: Shutdown
         if: always()
-        run: docker rm -f pg || true
+        run: docker rm -f database || true
