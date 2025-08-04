@@ -17,11 +17,6 @@ else
     echo "env file exists."
 fi
 
-echo "Waiting for PostgreSQL to be ready..."
-until pg_isready -h database -p 5432 -U "$DB_USERNAME"; do
-  sleep 2
-done
-
 php artisan migrate
 php artisan key:generate
 php artisan cache:clear
