@@ -106,14 +106,6 @@ jobs:
       - name: Create Docker Network
         run: docker network create board-yet-network
 
-      - name: Generate App Key
-        run: docker run --rm \
-              --network board-yet-network \
-              -v ${{ github.workspace }}:/var/www \
-              -w /var/www \
-              board-yet:${{ github.sha }} \
-              php artisan key:generate
-
       - name: Start PostgreSQL
         run: |
           docker run -d \
@@ -134,6 +126,7 @@ jobs:
             board-yet:${{ github.sha }} \
             sh -c "
               composer install --no-interaction --prefer-dist --no-progress && \
+              php artisan key:generate --force && \
               php artisan migrate --force && \
               php artisan test
             "
