@@ -103,10 +103,14 @@ jobs:
       - name: Copy .env.testing
         run: cp .env.testing .env
 
+      - name: Create Docker Network
+        run: docker network create board-yet-network
+
       - name: Start PostgreSQL
         run: |
           docker run -d \
-            --name pg \
+            --name database \
+            --network board-yet-network \
             -e POSTGRES_DB=boardyet_test \
             -e POSTGRES_USER=postgres \
             -e POSTGRES_PASSWORD=postgres \
@@ -121,28 +125,19 @@ jobs:
             sleep 3
           done
 
-      - name: Run Laravel Setup
+      - name: Run Migrations and Tests
         run: |
           docker run --rm \
-            --network host \
+            --network board-yet-network \
             -v ${{ github.workspace }}:/var/www \
             -w /var/www \
             board-yet:${{ github.sha }} \
             sh -c "
-              cp .env.testing .env && \
               composer install --no-interaction --prefer-dist --no-progress && \
               php artisan key:generate && \
-              php artisan migrate --force
+              php artisan migrate --force && \
+              php artisan test
             "
-
-      - name: Run Tests
-        run: |
-          docker run --rm \
-            --network host \
-            -v ${{ github.workspace }}:/var/www \
-            -w /var/www \
-            board-yet:${{ github.sha }} \
-            php artisan test
 
       - name: Shutdown
         if: always()
