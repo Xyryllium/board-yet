@@ -132,6 +132,7 @@ jobs:
             sh -c "
               cp .env.testing .env && \
               echo \"APP_KEY=$APP_KEY\" >> .env && \
+              composer install --no-interaction --prefer-dist --no-progress && \
               php artisan config:clear && \
               php artisan migrate --force && \
               php artisan test
