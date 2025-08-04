@@ -121,16 +121,6 @@ jobs:
             sleep 2
           done
 
-      - name: Set ENV and Generate APP_KEY
-        run: |
-          cp .env.testing .env
-          docker run --rm \
-            --network board-yet-network \
-            -v ${{ github.workspace }}:/var/www \
-            -w /var/www \
-            board-yet:${{ github.sha }} \
-            sh -c 'echo "APP_KEY=$(php artisan key:generate --show)" >> .env'
-
       - name: Run Migrations and Tests
         run: |
           docker run --rm \
@@ -139,7 +129,8 @@ jobs:
             -w /var/www \
             board-yet:${{ github.sha }} \
             sh -c "
-              composer install --no-interaction --prefer-dist --no-progress && \
+              cp .env.testing .env && \
+              echo \"APP_KEY=$APP_KEY\" >> .env && \
               php artisan migrate --force && \
               php artisan test
             "
