@@ -1,0 +1,27 @@
+includes:
+  - vendor/larastan/larastan/extension.neon
+  - vendor/nesbot/carbon/extension.neon
+
+parameters:
+  level: 5
+
+  paths:
+    - app
+    - routes
+    - database
+
+  excludePaths:
+    - tests/*
+    - bootstrap/*
+    - storage/*
+
+  checkMissingCallableSignature: false
+  checkUnionTypes: true
+  inferPrivatePropertyTypeFromConstructor: true
+  treatPhpDocTypesAsCertain: false
+
+  scanFiles:
+    - bootstrap/app.php
+
+  scanDirectories:
+    - app
