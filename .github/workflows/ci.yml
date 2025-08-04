@@ -121,19 +121,24 @@ jobs:
             sleep 2
           done
 
-      - name: Run Migrations and Tests
+      - name: Prepare .env file
         env:
           APP_KEY: ${{ secrets.APP_KEY }}
+        run: |
+          cp .env.testing .env
+          echo "APP_KEY=${APP_KEY}" >> .env
+          cat .env | grep APP_KEY
+
+      - name: Run Migrations and Tests
         run: |
           docker run --rm \
             --network board-yet-network \
             -e IS_CI=true \
+            -e APP_ENV=testing \
             -v ${{ github.workspace }}:/var/www \
             -w /var/www \
             board-yet:${{ github.sha }} \
             sh -c "
-              cp .env.testing .env && \
-              sed -i \"s|^APP_KEY=.*|APP_KEY=$APP_KEY|\" .env && \
               composer install --no-interaction --prefer-dist --no-progress && \
               php artisan config:clear && \
               php artisan migrate --force && \
