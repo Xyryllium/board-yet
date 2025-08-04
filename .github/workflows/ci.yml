@@ -103,16 +103,6 @@ jobs:
       - name: Create Docker Network
         run: docker network create board-yet-network
 
-      - name: Set ENV and Generate APP_KEY
-        run: |
-          cp .env.testing .env
-          docker run --rm \
-            --network board-yet-network \
-            -v ${{ github.workspace }}:/var/www \
-            -w /var/www \
-            board-yet:${{ github.sha }} \
-            sh -c "php artisan key:generate --show >> .env"
-
       - name: Start PostgreSQL
         run: |
           docker run -d \
@@ -123,6 +113,23 @@ jobs:
             -e POSTGRES_PASSWORD=postgres \
             -p 5432:5432 \
             postgres:15
+
+      - name: Wait for PostgreSQL to be Ready
+        run: |
+          echo "Waiting for PostgreSQL to be ready..."
+          until docker exec database pg_isready -U postgres; do
+            sleep 2
+          done
+
+      - name: Set ENV and Generate APP_KEY
+        run: |
+          cp .env.testing .env
+          docker run --rm \
+            --network board-yet-network \
+            -v ${{ github.workspace }}:/var/www \
+            -w /var/www \
+            board-yet:${{ github.sha }} \
+            sh -c "php artisan key:generate --show >> .env"
 
       - name: Run Migrations and Tests
         run: |
