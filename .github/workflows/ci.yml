@@ -40,10 +40,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download & Load Image
-        run: |
-          gh release download -p image.tar.gz || true
-          gunzip -c image.tar.gz | docker load
+      - name: Download Built Image
+        uses: actions/download-artifact@v4
+        with:
+          name: app-image
+
+      - name: Load Docker Image
+        run: gunzip -c image.tar.gz | docker load
 
       - name: Run PHPStan
         run: docker run --rm board-yet:${{ github.sha }} phpstan analyse app
@@ -54,10 +57,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download & Load Image
-        run: |
-          gh release download -p image.tar.gz || true
-          gunzip -c image.tar.gz | docker load
+      - name: Download Built Image
+        uses: actions/download-artifact@v4
+        with:
+          name: app-image
+
+      - name: Load Docker Image
+        run: gunzip -c image.tar.gz | docker load
 
       - name: Run PHPCS
         run: docker run --rm board-yet:${{ github.sha }} phpcs --standard=/var/www/phpcs.xml app
@@ -68,10 +74,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download & Load Image
-        run: |
-          gh release download -p image.tar.gz || true
-          gunzip -c image.tar.gz | docker load
+      - name: Download Built Image
+        uses: actions/download-artifact@v4
+        with:
+          name: app-image
+
+      - name: Load Docker Image
+        run: gunzip -c image.tar.gz | docker load
 
       - name: Run PHPMD
         run: docker run --rm board-yet:${{ github.sha }} phpmd app text phpmd.xml
@@ -83,10 +92,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download & Load Image
-        run: |
-          gh release download -p image.tar.gz || true
-          gunzip -c image.tar.gz | docker load
+      - name: Download Built Image
+        uses: actions/download-artifact@v4
+        with:
+          name: app-image
+
+      - name: Load Docker Image
+        run: gunzip -c image.tar.gz | docker load
 
       - name: Copy .env.testing
         run: cp .env.testing .env
