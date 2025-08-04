@@ -15,6 +15,8 @@ COPY . .
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+RUN composer install --no-interaction --prefer-dist --no-progress
+
 RUN composer global require \
     squizlabs/php_codesniffer \
     phpmd/phpmd \
@@ -23,6 +25,8 @@ RUN composer global require \
     && ln -s /root/.composer/vendor/bin/phpcs /usr/local/bin/phpcs \
     && ln -s /root/.composer/vendor/bin/phpmd /usr/local/bin/phpmd \
     && ln -s /root/.composer/vendor/bin/phpcbf /usr/local/bin/phpcbf
+
+RUN git config --global --add safe.directory /var/www
 
 COPY entrypoint.sh /usr/local/bin/laravel-setup.sh
 RUN chmod +x /usr/local/bin/laravel-setup.sh

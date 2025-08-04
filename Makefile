@@ -43,7 +43,7 @@ phpcs:
 	docker compose exec app phpcs --standard=phpcs.xml app
 
 phpstan:
-	docker compose exec app phpstan analyse app
+	docker compose exec app phpstan analyse app -c phpstan.neon --memory-limit=1G
 
 phpmd:
 	docker compose exec app phpmd app text phpmd.xml
