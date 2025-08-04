@@ -24,6 +24,8 @@ RUN composer global require \
     && ln -s /root/.composer/vendor/bin/phpmd /usr/local/bin/phpmd \
     && ln -s /root/.composer/vendor/bin/phpcbf /usr/local/bin/phpcbf
 
+RUN git config --global --add safe.directory /var/www
+
 COPY entrypoint.sh /usr/local/bin/laravel-setup.sh
 RUN chmod +x /usr/local/bin/laravel-setup.sh
 
