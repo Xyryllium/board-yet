@@ -49,7 +49,7 @@ jobs:
         run: gunzip -c image.tar.gz | docker load
 
       - name: Run PHPStan
-        run: docker run --rm board-yet:${{ github.sha }} phpstan analyse app -c phpstan.neon
+        run: docker run --rm board-yet:${{ github.sha }} phpstan analyse app -c phpstan.neon --memory-limit=512M
 
   phpcs:
     needs: build
@@ -107,7 +107,7 @@ jobs:
             -v ${{ github.workspace }}:/var/www \
             -w /var/www \
             board-yet:${{ github.sha }} \
-            sh -c "php artisan key:generate --show" >> .env
+            sh -c "php artisan key:generate --show >> .env"
 
       - name: Create Docker Network
         run: docker network create board-yet-network
