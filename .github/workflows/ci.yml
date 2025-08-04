@@ -40,13 +40,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download Built Image
-        uses: actions/download-artifact@v4
-        with:
-          name: app-image
-
-      - name: Load Docker Image
-        run: gunzip -c image.tar.gz | docker load
+      - name: Download & Load Image
+        run: |
+          gh release download -p image.tar.gz || true
+          gunzip -c image.tar.gz | docker load
 
       - name: Run PHPStan
         run: docker run --rm board-yet:${{ github.sha }} phpstan analyse app
@@ -57,13 +54,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download Built Image
-        uses: actions/download-artifact@v4
-        with:
-          name: app-image
-
-      - name: Load Docker Image
-        run: gunzip -c image.tar.gz | docker load
+      - name: Download & Load Image
+        run: |
+          gh release download -p image.tar.gz || true
+          gunzip -c image.tar.gz | docker load
 
       - name: Run PHPCS
         run: docker run --rm board-yet:${{ github.sha }} phpcs --standard=/var/www/phpcs.xml app
@@ -74,13 +68,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download Built Image
-        uses: actions/download-artifact@v4
-        with:
-          name: app-image
-
-      - name: Load Docker Image
-        run: gunzip -c image.tar.gz | docker load
+      - name: Download & Load Image
+        run: |
+          gh release download -p image.tar.gz || true
+          gunzip -c image.tar.gz | docker load
 
       - name: Run PHPMD
         run: docker run --rm board-yet:${{ github.sha }} phpmd app text phpmd.xml
@@ -92,13 +83,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download Built Image
-        uses: actions/download-artifact@v4
-        with:
-          name: app-image
-
-      - name: Load Docker Image
-        run: gunzip -c image.tar.gz | docker load
+      - name: Download & Load Image
+        run: |
+          gh release download -p image.tar.gz || true
+          gunzip -c image.tar.gz | docker load
 
       - name: Copy .env.testing
         run: cp .env.testing .env
@@ -115,18 +103,15 @@ jobs:
         run: docker compose up -d database app
 
       - name: Install Composer Dependencies
-        run: |
-            if [ ! -d vendor ]; then
-                docker compose exec -T app composer install --no-interaction --prefer-dist --no-progress
-            fi
+        run: docker compose exec -T app composer install --no-interaction --prefer-dist --no-progress
 
-      - name: Generate Laravel App Key
+      - name: Generate App Key
         run: docker compose exec -T app php artisan key:generate
 
-      - name: Laravel Migrations
+      - name: Run Migrations
         run: docker compose exec -T app php artisan migrate --force
 
-      - name: Laravel Tests
+      - name: Run Tests
         run: docker compose exec -T app php artisan test
 
       - name: Shutdown
