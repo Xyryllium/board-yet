@@ -125,15 +125,14 @@ jobs:
         run: |
           docker run --rm \
             --network board-yet-network \
+            -e IS_CI=true \
             -v ${{ github.workspace }}:/var/www \
             -w /var/www \
             board-yet:${{ github.sha }} \
             sh -c "
               cp .env.testing .env && \
-              echo '✅ Showing DB env vars:' && \
-              grep DB_ .env && \
-              php artisan config:clear && \
               echo \"APP_KEY=$APP_KEY\" >> .env && \
+              php artisan config:clear && \
               php artisan migrate --force && \
               php artisan test
             "
