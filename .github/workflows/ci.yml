@@ -100,17 +100,18 @@ jobs:
       - name: Load Docker Image
         run: gunzip -c image.tar.gz | docker load
 
-      - name: Copy .env.testing and Generate APP_KEY
+      - name: Create Docker Network
+        run: docker network create board-yet-network
+
+      - name: Set ENV and Generate APP_KEY
         run: |
           cp .env.testing .env
           docker run --rm \
+            --network board-yet-network \
             -v ${{ github.workspace }}:/var/www \
             -w /var/www \
             board-yet:${{ github.sha }} \
             sh -c "php artisan key:generate --show >> .env"
-
-      - name: Create Docker Network
-        run: docker network create board-yet-network
 
       - name: Start PostgreSQL
         run: |
