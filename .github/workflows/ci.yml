@@ -100,8 +100,14 @@ jobs:
       - name: Load Docker Image
         run: gunzip -c image.tar.gz | docker load
 
-      - name: Copy .env.testing
-        run: cp .env.testing .env
+      - name: Copy .env.testing and Generate APP_KEY
+        run: |
+          cp .env.testing .env
+          docker run --rm \
+            -v ${{ github.workspace }}:/var/www \
+            -w /var/www \
+            board-yet:${{ github.sha }} \
+            sh -c "php artisan key:generate --show" >> .env
 
       - name: Create Docker Network
         run: docker network create board-yet-network
@@ -126,7 +132,6 @@ jobs:
             board-yet:${{ github.sha }} \
             sh -c "
               composer install --no-interaction --prefer-dist --no-progress && \
-              php artisan key:generate --force && \
               php artisan migrate --force && \
               php artisan test
             "
