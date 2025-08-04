@@ -129,7 +129,7 @@ jobs:
             -v ${{ github.workspace }}:/var/www \
             -w /var/www \
             board-yet:${{ github.sha }} \
-            sh -c "php artisan key:generate --show >> .env"
+            sh -c 'echo "APP_KEY=$(php artisan key:generate --show)" >> .env'
 
       - name: Run Migrations and Tests
         run: |
