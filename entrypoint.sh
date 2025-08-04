@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-if echo "$*" | grep -qE "php(cs|md|stan)|artisan (test|tinker|key:generate|config:clear|route:clear|migrate)"; then
+if echo "$*" | grep -qE "php(cs|md|stan)"; then
     echo "Running safe tool command — skipping Laravel app bootstrap..."
     exec "$@"
 fi
