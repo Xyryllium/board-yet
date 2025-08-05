@@ -19,12 +19,12 @@ class OrganizationInvitation
     {
         return $this->email;
     }
-    
+
     public function getToken(): string
     {
         return $this->token;
     }
-    
+
     public function getOrganizationId(): int
     {
         return $this->organizationId;
@@ -39,7 +39,7 @@ class OrganizationInvitation
     {
         return $this->status;
     }
-    
+
     public function toArray(): array
     {
         return [

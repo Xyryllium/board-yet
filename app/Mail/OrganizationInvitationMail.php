@@ -11,15 +11,15 @@ use Illuminate\Queue\SerializesModels;
 
 class OrganizationInvitationMail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable;
+    use SerializesModels;
 
     /**
      * Create a new message instance.
      */
     public function __construct(
         private OrganizationInvitation $invitation
-    )
-    {
+    ) {
         $this->invitation = $invitation->load('organization');
     }
 

@@ -10,7 +10,6 @@ class OrganizationMemberController extends Controller
 {
     public function __construct(private OrganizationService $service)
     {
-        
     }
 
     public function invite(Request $request, int $organizationId): JsonResponse

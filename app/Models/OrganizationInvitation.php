@@ -23,9 +23,4 @@ class OrganizationInvitation extends Model
     {
         return $this->belongsTo(Organization::class);
     }
-
-    public function markAsAccepted(): void
-    {
-        $this->status = 'accepted';
-    }
 }

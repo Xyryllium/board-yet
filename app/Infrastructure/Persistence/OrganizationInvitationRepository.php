@@ -3,10 +3,10 @@
 namespace App\Infrastructure\Persistence;
 
 use App\Domain\Organization\Entities\OrganizationInvitation as EntitiesOrganizationInvitation;
-use App\Domain\Organization\Repositories\OrganizationInvitationRepositoryInterface;
+use App\Domain\Organization\Repositories\OrgInvitationRepositoryInterface;
 use App\Models\OrganizationInvitation;
 
-class OrganizationInvitationRepository implements OrganizationInvitationRepositoryInterface
+class OrganizationInvitationRepository implements OrgInvitationRepositoryInterface
 {
     public function create(EntitiesOrganizationInvitation $orgInviteEntity): OrganizationInvitation
     {

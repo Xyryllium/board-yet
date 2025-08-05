@@ -4,8 +4,8 @@ namespace App\Application\Organization\Services;
 
 use App\Domain\Organization\Entities\OrganizationInvitation;
 use App\Domain\Organization\Enums\InvitationStatus;
-use App\Domain\Organization\Repositories\OrganizationInvitationRepositoryInterface;
 use App\Domain\Organization\Repositories\OrganizationRepositoryInterface;
+use App\Domain\Organization\Repositories\OrgInvitationRepositoryInterface;
 use App\Domain\Organization\Services\OrganizationDomainService;
 use App\Domain\User\Repositories\UserRepositoryInterface;
 use App\Mail\OrganizationInvitationMail;
@@ -18,12 +18,15 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Psr\Log\LoggerInterface;
 
+/**
+ * @SuppressWarnings(MissingImport)
+ */
 class OrganizationService
 {
     public function __construct(
         private OrganizationDomainService $orgDomainService,
         private OrganizationRepositoryInterface $orgRepository,
-        private OrganizationInvitationRepositoryInterface $invitationRepository,
+        private OrgInvitationRepositoryInterface $invitationRepository,
         private UserRepositoryInterface $userRepository,
         private Connection $database,
         private Str $str,
@@ -52,9 +55,12 @@ class OrganizationService
         });
     }
 
-    public function createInvitation(int $organizationId, string $email, string $role = 'member'): ModelsOrganizationInvitation
-    {
-        try{
+    public function createInvitation(
+        int $organizationId,
+        string $email,
+        string $role = 'member'
+    ): ModelsOrganizationInvitation {
+        try {
             $invitationEntity = new OrganizationInvitation(
                 email: $email,
                 token: $this->str->uuid()->toString(),
@@ -66,7 +72,7 @@ class OrganizationService
             $invitation = $this->invitationRepository->create($invitationEntity);
 
             $this->sendMail($invitation, $email, $organizationId);
-            
+
             return $invitation;
         } catch (\Exception $e) {
             $this->logger->error("Failed to create and send organization invitation", [
@@ -83,7 +89,7 @@ class OrganizationService
     {
         $invitation = $this->invitationRepository->findByToken($token);
 
-        if(!$invitation) {
+        if (!$invitation) {
             throw new \RuntimeException("Invalid invitation token");
         }
 
@@ -93,7 +99,7 @@ class OrganizationService
 
         $user = $this->userRepository->findByEmail($user->email);
 
-        if(!$user) {
+        if (!$user) {
             throw new \RuntimeException("User not found");
         }
 
@@ -104,7 +110,7 @@ class OrganizationService
 
     private function sendMail(ModelsOrganizationInvitation $invitation, string $email, int $organizationId): void
     {
-        try{
+        try {
             Mail::to($email)->send(new OrganizationInvitationMail($invitation));
 
             $this->logger->info("Invitation email sent successfully", [
