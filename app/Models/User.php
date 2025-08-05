@@ -61,4 +61,9 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Organization::class, 'current_organization_id');
     }
+
+    public function joinOrganization(int $organizationId, string $role): void
+    {
+        $this->organizations()->attach($organizationId, ['role' => $role]);
+    }
 }

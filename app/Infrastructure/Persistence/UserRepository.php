@@ -20,4 +20,9 @@ class UserRepository implements UserRepositoryInterface
             'password' => $user->getPassword(),
         ]);
     }
+
+    public function findByEmail(string $email): ?EloquentUser
+    {
+        return $this->user->where('email', $email)->first();
+    }
 }
