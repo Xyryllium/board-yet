@@ -51,7 +51,7 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        if ($this->auth->guard()->attempt($credentials)) {
+        if (!$this->auth->guard()->attempt($credentials)) {
             return response()->json(['Invalid credentials'], 401);
         }
 
