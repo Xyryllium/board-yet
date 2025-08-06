@@ -8,4 +8,5 @@ use App\Models\User as EloquentUser;
 interface UserRepositoryInterface
 {
     public function save(User $user): EloquentUser;
+    public function findByEmail(string $email): ?EloquentUser;
 }
