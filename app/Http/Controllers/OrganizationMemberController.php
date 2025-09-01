@@ -34,7 +34,7 @@ class OrganizationMemberController extends Controller
 
     public function acceptInvitation(Request $request): JsonResponse
     {
-        try{
+        try {
             $data = $request->validate([
                 'token' => 'required|string',
             ]);
@@ -48,7 +48,7 @@ class OrganizationMemberController extends Controller
             'message' => 'Invitation accepted successfully!',
             'status' => 'invitation_accepted',
             ]);
-        } catch(UserNotRegisteredException $userException){
+        } catch (UserNotRegisteredException $userException) {
             return response()->json([
                 'message' => $userException->getMessage(),
                 'status' => 'user_not_registered',

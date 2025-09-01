@@ -5,6 +5,7 @@ use App\Models\Organization;
 use App\Models\OrganizationInvitation;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 
 uses(RefreshDatabase::class);
 
@@ -14,7 +15,7 @@ test('a user can accept a valid invitation', function () {
     ]);
 
     $organization = Organization::factory()->create([
-        'owner_id' => 1,
+        'owner_id' => $user->id,
     ]);
 
     $invitation = OrganizationInvitation::factory()->create([
@@ -57,7 +58,7 @@ test('a user cannot accept an invitation with an invalid token', function () {
 
     $invitation = OrganizationInvitation::factory()->create([
         'email' => $user->email,
-        'token' => 'valid-token',
+        'token' => (string) Str::uuid(),
         'organization_id' => $organization->id,
     ]);
 
