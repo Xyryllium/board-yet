@@ -64,7 +64,7 @@ test('a user cannot accept an invitation with an invalid token', function () {
 
     $response = $this->actingAs($user)
                 ->postJson('/api/organizations/invitations/accept', [
-            'token' => 'invalid-token',
+            'token' => 'invalid2-39b9-4dd8-a10a-token7a08cbd',
     ]);
 
     $response->assertStatus(400)
