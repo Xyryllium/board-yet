@@ -11,7 +11,6 @@ class BoardController extends Controller
 {
     public function __construct(private BoardService $boardService)
     {
-        
     }
 
     public function store(Request $request): JsonResponse

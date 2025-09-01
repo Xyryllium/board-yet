@@ -11,14 +11,14 @@ class BoardService
     {
     }
 
-    public function create(User $user, array $boardData): array
+    public function create(?User $user, array $boardData): array
     {
-        if(!$user) {
-            throw new \Exception('User is not authenticated.');
+        if (!$user) {
+            throw new \RuntimeException('User is not authenticated.');
         }
 
-        if(!$user->currentOrganization()) {
-            throw new \Exception('User does not belong to any organization.');
+        if (!$user->currentOrganization()) {
+            throw new \RuntimeException('User does not belong to any organization.');
         }
 
         $boardData['organization_id'] = $user->current_organization_id;

@@ -7,7 +7,6 @@ use App\Models\Board;
 
 class BoardRepository implements BoardRepositoryInterface
 {
-
     public function save(array $boardData): void
     {
         Board::create([
