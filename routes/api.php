@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BoardController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\OrganizationMemberController;
 use Illuminate\Support\Facades\Route;
@@ -16,5 +17,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('organizations')->group(function () {
         Route::post('/', [OrganizationController::class, 'store']);
         Route::post('/{id}/invite', [OrganizationMemberController::class, 'invite']);
+    });
+    Route::prefix('boards')->group(function () {
+        Route::post('/', [BoardController::class, 'store']);
     });
 });
