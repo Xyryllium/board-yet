@@ -20,7 +20,7 @@ test('a user can accept a valid invitation', function () {
 
     $invitation = OrganizationInvitation::factory()->create([
         'email' => $user->email,
-        'token' => 'valid-token',
+        'token' => (string) Str::uuid(),
         'organization_id' => $organization->id,
     ]);
 
@@ -53,7 +53,7 @@ test('a user cannot accept an invitation with an invalid token', function () {
     ]);
 
     $organization = Organization::factory()->create([
-        'owner_id' => 1,
+        'owner_id' => $user->id,
     ]);
 
     $invitation = OrganizationInvitation::factory()->create([
@@ -72,4 +72,37 @@ test('a user cannot accept an invitation with an invalid token', function () {
                  'message' => 'Invalid invitation token',
                  'status' => 'error',
              ]);
+});
+
+test('a unregistered user can accept invitation and has not registered status ', function () {
+    $orgOwner = User::factory()->create([
+        'email' => 'john.doe@example.com'
+    ]);
+
+    $organization = Organization::factory()->create([
+        'owner_id' => $orgOwner->id,
+    ]);
+
+    $invitation = OrganizationInvitation::factory()->create([
+        'email' => 'unregistered.user@example.com',
+        'token' => (string) Str::uuid(),
+        'organization_id' => $organization->id,
+    ]);
+
+    $response = $this->postJson('/api/organizations/invitations/accept', [
+            'token' => $invitation->token,
+    ]);
+
+    $response->assertStatus(400)
+             ->assertJson([
+                 'message' => 'User is not registered.',
+                 'status' => 'user_not_registered',
+             ]);
+
+    $this->assertDatabaseHas('organization_invitations', [
+        'email' => 'unregistered.user@example.com',
+        'token' => $invitation->token,
+        'role' => 'member',
+        'status' => InvitationStatus::PENDING->value,
+    ]);
 });

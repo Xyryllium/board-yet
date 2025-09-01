@@ -86,7 +86,7 @@ class OrganizationService
         }
     }
 
-    public function acceptInvitation(string $token, User $user): void
+    public function acceptInvitation(string $token, ?User $user): void
     {
         $invitation = $this->invitationRepository->findByToken($token);
 
@@ -94,14 +94,14 @@ class OrganizationService
             throw new \RuntimeException("Invalid invitation token");
         }
 
-        if (strcasecmp($invitation->email, $user->email) !== 0) {
-            throw new \RuntimeException("This invitation does not belong to your account.");
-        }
-
-        $user = $this->userRepository->findByEmail($user->email);
+        $user = $user ? $this->userRepository->findByEmail($user->email) : null;
 
         if (!$user) {
             throw new UserNotRegisteredException($invitation->email, $token);
+        }
+
+        if (strcasecmp($invitation->email, $user->email) !== 0) {
+            throw new \RuntimeException("This invitation does not belong to your account.");
         }
 
         $user->joinOrganization($invitation->organization_id, $invitation->role);
