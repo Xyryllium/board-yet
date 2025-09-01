@@ -7,6 +7,7 @@ use App\Domain\Organization\Enums\InvitationStatus;
 use App\Domain\Organization\Repositories\OrganizationRepositoryInterface;
 use App\Domain\Organization\Repositories\OrgInvitationRepositoryInterface;
 use App\Domain\Organization\Services\OrganizationDomainService;
+use App\Domain\User\Exceptions\UserNotRegisteredException;
 use App\Domain\User\Repositories\UserRepositoryInterface;
 use App\Mail\OrganizationInvitationMail;
 use App\Models\Organization;
@@ -85,7 +86,7 @@ class OrganizationService
         }
     }
 
-    public function acceptInvitation(string $token, User $user): void
+    public function acceptInvitation(string $token, ?User $user): void
     {
         $invitation = $this->invitationRepository->findByToken($token);
 
@@ -93,14 +94,14 @@ class OrganizationService
             throw new \RuntimeException("Invalid invitation token");
         }
 
-        if (strcasecmp($invitation->email, $user->email) !== 0) {
-            throw new \RuntimeException("This invitation does not belong to your account.");
-        }
-
-        $user = $this->userRepository->findByEmail($user->email);
+        $user = $user ? $this->userRepository->findByEmail($user->email) : null;
 
         if (!$user) {
-            throw new \RuntimeException("User not found");
+            throw new UserNotRegisteredException($invitation->email, $token);
+        }
+
+        if (strcasecmp($invitation->email, $user->email) !== 0) {
+            throw new \RuntimeException("This invitation does not belong to your account.");
         }
 
         $user->joinOrganization($invitation->organization_id, $invitation->role);

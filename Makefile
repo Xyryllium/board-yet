@@ -1,3 +1,5 @@
+ARTISAN = docker compose exec app php artisan
+
 start:
 	docker compose start	
 
@@ -8,28 +10,31 @@ stop:
 	docker compose down -v 	
 
 migrate:
-	docker compose exec app php artisan migrate
+	$(ARTISAN) migrate
 
 create-migration:
-	docker compose exec app php artisan make:migration $(word 2, $(MAKECMDGOALS))
+	$(ARTISAN) make:migration $(word 2, $(MAKECMDGOALS))
 
 create-controller:
-	docker compose exec app php artisan make:controller $(word 2, $(MAKECMDGOALS))
+	$(ARTISAN) make:controller $(word 2, $(MAKECMDGOALS))
 
 route-list:
-	docker compose exec app php artisan route:list
+	$(ARTISAN) route:list
 
 create-model:
-	docker compose exec app php artisan make:model $(word 2, $(MAKECMDGOALS))
+	$(ARTISAN) make:model $(word 2, $(MAKECMDGOALS))
 
 create-factory:
-	docker compose exec app php artisan make:factory $(name) --model=$(model)
+	$(ARTISAN) make:factory $(name) --model=$(model)
 
 create-seed:
-	docker compose exec app php artisan make:seeder $(word 2, $(MAKECMDGOALS))
+	$(ARTISAN) make:seeder $(word 2, $(MAKECMDGOALS))
 
 seed:
-	docker compose exec app php artisan db:seed
+	$(ARTISAN) db:seed
+
+create-test:
+	$(ARTISAN) make:test $(word 2, $(MAKECMDGOALS))
 
 phpqa:
 	docker compose exec app phpstan analyse app
