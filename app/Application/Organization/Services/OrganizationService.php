@@ -7,6 +7,7 @@ use App\Domain\Organization\Enums\InvitationStatus;
 use App\Domain\Organization\Repositories\OrganizationRepositoryInterface;
 use App\Domain\Organization\Repositories\OrgInvitationRepositoryInterface;
 use App\Domain\Organization\Services\OrganizationDomainService;
+use App\Domain\User\Exceptions\UserNotRegisteredException;
 use App\Domain\User\Repositories\UserRepositoryInterface;
 use App\Mail\OrganizationInvitationMail;
 use App\Models\Organization;
@@ -100,7 +101,7 @@ class OrganizationService
         $user = $this->userRepository->findByEmail($user->email);
 
         if (!$user) {
-            throw new \RuntimeException("User not found");
+            throw new UserNotRegisteredException($invitation->email, $token);
         }
 
         $user->joinOrganization($invitation->organization_id, $invitation->role);
