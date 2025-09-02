@@ -36,8 +36,11 @@ seed:
 create-test:
 	$(ARTISAN) make:test $(word 2, $(MAKECMDGOALS))
 
+test:
+	$(ARTISAN) test
+
 phpqa:
-	docker compose exec app phpstan analyse app
+	docker compose exec app phpstan analyse app -c phpstan.neon --memory-limit=1G
 	docker compose exec app phpcs --standard=phpcs.xml app
 	docker compose exec app phpmd app text phpmd.xml
 

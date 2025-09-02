@@ -8,6 +8,9 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
+/**
+ * @property \App\Models\Organization|null $currentOrganization
+ */
 class User extends Authenticatable
 {
     use HasApiTokens;
@@ -65,5 +68,7 @@ class User extends Authenticatable
     public function joinOrganization(int $organizationId, string $role): void
     {
         $this->organizations()->attach($organizationId, ['role' => $role]);
+        //TODO: decide if we want to switch current organization on join
+        $this->current_organization_id = $organizationId;
     }
 }
