@@ -62,7 +62,7 @@ Update:
 DB_CONNECTION=pgsql
 DB_HOST=db
 DB_PORT=5432
-DB_DATABASE=trello
+DB_DATABASE=board_yet
 DB_USERNAME=postgres
 DB_PASSWORD=secret
 ```
