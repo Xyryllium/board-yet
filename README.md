@@ -15,7 +15,7 @@ Users belong to organizations, can invite team members, and collaborate on board
 - **Boards, Lists & Cards** (Trello-style)
 - **Role-based access** (Owner, Member)
 - **Feature tests** for core flows
-- **Fully dockerized* (Laravel, Nginx, PostgreSQL)
+- **Fully dockerized** (Laravel, Nginx, PostgreSQL)
 
 ## Tech Stack
 - **Backend:** Laravel 12 (PHP 8.3)
