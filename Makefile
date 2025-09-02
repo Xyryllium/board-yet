@@ -9,6 +9,9 @@ build:
 stop:
 	docker compose down -v 	
 
+composer-install:
+	docker compose exec app composer install
+
 migrate:
 	$(ARTISAN) migrate
 
