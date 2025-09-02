@@ -20,5 +20,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::prefix('boards')->group(function () {
         Route::post('/', [BoardController::class, 'store']);
+        Route::get('/', [BoardController::class, 'index']);
+        Route::put('/{id}', [BoardController::class, 'update']);
     });
 });
