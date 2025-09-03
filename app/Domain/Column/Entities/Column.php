@@ -10,7 +10,8 @@ class Column
         public int $order,
         public ?string $created_at = null,
         public ?string $updated_at = null,
-    ) {}
+    ) {
+    }
 
     public function getId(): ?int
     {

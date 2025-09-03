@@ -11,7 +11,7 @@ class ColumnService
     public function __construct(
         private ColumnRepositoryInterface $columnRepository,
         private ColumnDomainService $columnDomainService,
-    ){
+    ) {
     }
 
     public function list(User $user, int $boardId): array

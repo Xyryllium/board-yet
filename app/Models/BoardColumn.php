@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class BoardColumn extends Model
 {
     use HasFactory;
-    
+
     protected $table = 'columns';
 
     protected $fillable = [

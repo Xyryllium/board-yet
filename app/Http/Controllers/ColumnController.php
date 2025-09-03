@@ -15,9 +15,9 @@ class ColumnController extends Controller
 
     public function index(int $boardId): JsonResponse
     {
-        try{
+        try {
             $columns = $this->columnService->list(auth()->user(), $boardId);
-            
+
             return response()->json([
                 'data' => $columns
             ], 200);
@@ -47,7 +47,7 @@ class ColumnController extends Controller
             return response()->json([
                 'error' => $e->getMessage()
             ], 403);
-        }   
+        }
     }
 
     public function update(Request $request, Board $board): JsonResponse

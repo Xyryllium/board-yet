@@ -8,12 +8,11 @@ class ColumnDomainService
 {
     public function __construct(private BoardRepositoryInterface $boardRepository)
     {
-        
     }
-    
+
     public function canAccessBoard(int $boardId, int $organizationId): bool
     {
         $board = $this->boardRepository->findByIdAndOrganizationId($boardId, $organizationId);
         return $board !== null;
-    }   
+    }
 }
