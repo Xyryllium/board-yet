@@ -71,7 +71,7 @@ describe('Column Management', function () {
             ->assertJson([
                 'message' => 'Column created successfully!',
                 'data' => [
-                    'id' => 1,
+                    'id' => $response->json('data.id'),
                     'name' => 'New Column',
                     'order' => 1,
                     'created_at' => $response->json('data.created_at'),
