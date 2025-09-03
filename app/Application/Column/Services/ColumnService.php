@@ -2,6 +2,7 @@
 
 namespace App\Application\Column\Services;
 
+use RuntimeException;
 use App\Domain\Column\Repositories\ColumnRepositoryInterface;
 use App\Domain\Column\Services\ColumnDomainService;
 use App\Models\User;
@@ -40,7 +41,7 @@ class ColumnService
     private function ensureUserCanAccessBoard(?User $user, int $boardId): void
     {
         if (!$this->columnDomainService->canAccessBoard($boardId, $user->current_organization_id)) {
-            throw new \RuntimeException('User does not have access to this board.');
+            throw new RuntimeException('User does not have access to this board.');
         }
     }
 }

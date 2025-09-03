@@ -19,7 +19,7 @@ class ColumnRepository implements ColumnRepositoryInterface
 
     public function fetchMaxOrderInBoard(int $boardId): int
     {
-        return BoardColumn::where('board_id', $boardId)->max('order') + 1 ?? 1;
+        return (BoardColumn::where('board_id', $boardId)->max('order') ?? 0) + 1;
     }
 
     public function create(array $columnData): array

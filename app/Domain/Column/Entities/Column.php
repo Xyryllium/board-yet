@@ -5,17 +5,17 @@ namespace App\Domain\Column\Entities;
 class Column
 {
     public function __construct(
-        public ?int $id,
+        public ?int $columnId,
         public string $name,
         public int $order,
-        public ?string $created_at = null,
-        public ?string $updated_at = null,
+        public ?string $createdAt = null,
+        public ?string $updatedAt = null,
     ) {
     }
 
     public function getId(): ?int
     {
-        return $this->id;
+        return $this->columnId;
     }
 
     public function getName(): string
@@ -30,22 +30,22 @@ class Column
 
     public function getCreatedAt(): ?string
     {
-        return $this->created_at;
+        return $this->createdAt;
     }
 
     public function getUpdatedAt(): ?string
     {
-        return $this->updated_at;
+        return $this->updatedAt;
     }
 
     public function toArray(): array
     {
         return [
-            'id' => $this->id,
+            'id' => $this->columnId,
             'name' => $this->name,
             'order' => $this->order,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
+            'created_at' => $this->createdAt,
+            'updated_at' => $this->updatedAt,
         ];
     }
 }
