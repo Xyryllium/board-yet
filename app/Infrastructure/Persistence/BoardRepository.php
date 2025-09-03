@@ -49,6 +49,15 @@ class BoardRepository implements BoardRepositoryInterface
         return $board ? $this->toDomain($board)->toArray() : null;
     }
 
+    public function findByIdAndOrganizationId(int $boardId, int $organizationId): ?array
+    {
+        $board = Board::where('id', $boardId)
+                ->where('organization_id', $organizationId)
+                ->first();
+
+        return $board ? $this->toDomain($board)->toArray() : null;
+    }
+
     private function toDomain(Board $board): EntitiesBoard
     {
         return new EntitiesBoard(
