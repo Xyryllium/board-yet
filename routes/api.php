@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BoardController;
+use App\Http\Controllers\ColumnController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\OrganizationMemberController;
 use Illuminate\Support\Facades\Route;
@@ -22,5 +23,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', [BoardController::class, 'store']);
         Route::get('/', [BoardController::class, 'index']);
         Route::put('/{id}', [BoardController::class, 'update']);
+
+        Route::get('/{id}/columns', [ColumnController::class, 'index']);
+        Route::post('/{id}/columns', [ColumnController::class, 'store']);
+        Route::put('/{board}/columns', [ColumnController::class, 'update']);
     });
 });
