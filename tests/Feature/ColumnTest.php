@@ -12,7 +12,7 @@ describe('Column Management', function () {
 
     beforeEach(function () {
         $this->user = User::factory()->create([
-        'email' => 'john.doe@example.com',
+            'email' => 'john.doe@example.com',
         ]);
 
         $this->organization = Organization::factory()->create([

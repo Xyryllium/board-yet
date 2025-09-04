@@ -17,6 +17,21 @@ class BoardRepository implements BoardRepositoryInterface
         })->toArray();
     }
 
+    public function findByIdWithCards(int $boardId): ?array
+    {
+        /** @phpstan-ignore-next-line */
+        $boardWithCards = Board::with([
+            'columns' => function ($query) {
+                $query->orderBy('order');
+            },
+            'columns.cards' => function ($query) {
+                $query->orderBy('order');
+            },
+        ])->find($boardId);
+
+        return $boardWithCards ? $this->toDomain($boardWithCards)->toArray() : null;
+    }
+
     public function create(array $boardData): array
     {
         $board = Board::create([
@@ -60,9 +75,23 @@ class BoardRepository implements BoardRepositoryInterface
 
     private function toDomain(Board $board): EntitiesBoard
     {
-        return new EntitiesBoard(
-            name: $board->name,
-            boardId: $board->id,
-        );
+        return EntitiesBoard::fromArray([
+            'id' => $board->id,
+            'name' => $board->name,
+            /** @phpstan-ignore-next-line */
+            'columns' => $board->columns?->map(fn ($column) => [
+                'id' => $column->id,
+                'name' => $column->name,
+                'order' => $column->order,
+                'cards' => $column->cards?->map(fn ($card) => [
+                        'id' => $card->id,
+                        'title' => $card->title,
+                        'description' => $card->description,
+                        'order' => $card->order,
+                ])->toArray() ?? [],
+            ])->toArray() ?? [],
+            'created_at' => $board->created_at,
+            'updated_at' => $board->updated_at,
+        ]);
     }
 }

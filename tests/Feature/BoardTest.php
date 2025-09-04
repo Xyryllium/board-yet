@@ -10,7 +10,7 @@ uses(RefreshDatabase::class);
 describe('Board Management', function () {
     beforeEach(function () {
         $this->user = User::factory()->create([
-        'email' => 'john.doe@example.com',
+            'email' => 'john.doe@example.com',
         ]);
 
         $this->organization = Organization::factory()->create([
@@ -128,5 +128,46 @@ describe('Board Management', function () {
             ->assertJson([
                 'message' => 'Board name already exists in this organization.'
             ]);
+    });
+
+    it('can list board with its columns and cards', function () {
+        $board = Board::factory()->create([
+            'name' => 'Board with Cards',
+            'organization_id' => $this->organization->id,
+        ]);
+
+        $column = $board->columns()->create([
+            'name' => 'To Do',
+            'order' => 1,
+        ]);
+
+        $column->cards()->createMany([
+            ['title' => 'Task 1', 'description' => 'Description 1', 'order' => 1],
+            ['title' => 'Task 2', 'description' => 'Description 2', 'order' => 2],
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->getJson("/api/boards/{$board->id}");
+
+        $response
+            ->assertStatus(200)
+            ->assertJsonStructure([
+                'data' => [
+                    'id',
+                    'name',
+                    'columns' => [
+                        '*' => [
+                            'id',
+                            'name',
+                            'order',
+                            'cards' => [
+                                '*' => ['id', 'title', 'description', 'order']
+                            ]
+                        ]
+                    ]
+                ]
+            ])
+            ->assertJsonCount(1, 'data.columns')
+            ->assertJsonCount(2, 'data.columns.0.cards');
     });
 });

@@ -21,6 +21,14 @@ class BoardController extends Controller
         ], 200);
     }
 
+    public function show(int $boardId): JsonResponse
+    {
+        $board = $this->boardService->getBoardWithCards($boardId);
+        return response()->json([
+            'data' => $board
+        ], 200);
+    }
+
     public function store(Request $request): JsonResponse
     {
         try {

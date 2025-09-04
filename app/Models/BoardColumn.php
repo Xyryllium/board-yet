@@ -24,6 +24,6 @@ class BoardColumn extends Model
 
     public function cards()
     {
-        return $this->hasMany(Card::class)->orderBy('order');
+        return $this->hasMany(Card::class, 'column_id')->orderBy('order');
     }
 }
