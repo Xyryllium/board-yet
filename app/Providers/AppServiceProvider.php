@@ -3,11 +3,13 @@
 namespace App\Providers;
 
 use App\Domain\Board\Repositories\BoardRepositoryInterface;
+use App\Domain\Card\Repositories\CardRepositoryInterface;
 use App\Domain\Column\Repositories\ColumnRepositoryInterface;
 use App\Domain\Organization\Repositories\OrganizationRepositoryInterface;
 use App\Domain\Organization\Repositories\OrgInvitationRepositoryInterface;
 use App\Domain\User\Repositories\UserRepositoryInterface;
 use App\Infrastructure\Persistence\BoardRepository;
+use App\Infrastructure\Persistence\CardRepository;
 use App\Infrastructure\Persistence\ColumnRepository;
 use App\Infrastructure\Persistence\OrganizationInvitationRepository;
 use App\Infrastructure\Persistence\OrganizationRepository;
@@ -26,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(OrgInvitationRepositoryInterface::class, OrganizationInvitationRepository::class);
         $this->app->bind(BoardRepositoryInterface::class, BoardRepository::class);
         $this->app->bind(ColumnRepositoryInterface::class, ColumnRepository::class);
+        $this->app->bind(CardRepositoryInterface::class, CardRepository::class);
     }
 
     /**
