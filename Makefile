@@ -42,6 +42,9 @@ create-test:
 test:
 	$(ARTISAN) test
 
+test-filter:
+	$(ARTISAN) test --filter=$(word 2, $(MAKECMDGOALS))
+
 phpqa:
 	docker compose exec app phpstan analyse app -c phpstan.neon --memory-limit=1G
 	docker compose exec app phpcs --standard=phpcs.xml app
