@@ -89,4 +89,26 @@ describe('Card Management', function () {
         $this->assertNotNull($response->json('data.created_at'));
         $this->assertNotNull($response->json('data.updated_at'));
     });
+
+    it('can delete a card', function () {
+        $card = Card::factory()->create([
+            'column_id' => $this->column->id,
+            'title' => 'Card to be deleted',
+            'description' => 'This card will be deleted',
+            'order' => 1,
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->deleteJson("/api/cards/{$card->id}");
+
+        $response
+            ->assertStatus(200)
+            ->assertJson([
+                'message' => 'Card deleted successfully!',
+            ]);
+
+        $this->assertDatabaseMissing('cards', [
+            'id' => $card->id,
+        ]);
+    });
 });

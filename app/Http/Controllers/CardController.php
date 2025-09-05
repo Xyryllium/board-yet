@@ -52,13 +52,22 @@ class CardController extends Controller
                 'order' => 'sometimes|required|integer',
             ]);
 
-            // Assuming you have an updateCard method in your service
             $card = $this->cardService->updateCard($cardId, $data);
 
             return response()->json([
                 'message' => 'Card updated successfully!',
                 'data' => $card->toArray(),
             ], 200);
+        } catch (RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
+        }
+    }
+
+    public function destroy(int $cardId): JsonResponse
+    {
+        try {
+            $this->cardService->deleteCard($cardId);
+            return response()->json(['message' => 'Card deleted successfully!'], 200);
         } catch (RuntimeException $e) {
             return response()->json(['message' => $e->getMessage()], 400);
         }

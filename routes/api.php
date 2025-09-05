@@ -36,5 +36,6 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::prefix('cards')->group(function () {
         Route::put('/{id}', [CardController::class, 'update']);
+        Route::delete('/{id}', [CardController::class, 'destroy']);
     });
 });

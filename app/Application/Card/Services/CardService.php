@@ -41,4 +41,10 @@ class CardService
 
         return $this->cardRepository->save($card);
     }
+
+    public function deleteCard(int $cardId): void
+    {
+        $card = $this->findCardById($cardId);
+        $this->cardRepository->delete($card);
+    }
 }
