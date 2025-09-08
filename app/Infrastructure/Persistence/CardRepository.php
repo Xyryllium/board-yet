@@ -35,7 +35,7 @@ class CardRepository implements CardRepositoryInterface
 
         if ($cardModel) {
             $cardModel->delete();
-        }   
+        }
     }
 
     private function toDomain(Card $card): EntitiesCard
