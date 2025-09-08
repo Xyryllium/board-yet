@@ -2,12 +2,11 @@
 
 namespace App\Application\Board\Services;
 
+use RuntimeException;
+use App\Domain\Board\Exceptions\BoardNotFoundException;
 use App\Domain\Board\Repositories\BoardRepositoryInterface;
 use App\Models\User;
 
-/**
- * @SuppressWarnings(MissingImport)
- */
 class BoardService
 {
     public function __construct(private BoardRepositoryInterface $boardRepository)
@@ -17,6 +16,17 @@ class BoardService
     public function list(User $user): array
     {
         return $this->boardRepository->all($user->current_organization_id);
+    }
+
+    public function getBoardWithCards(int $boardId): array
+    {
+        $board = $this->boardRepository->findByIdWithCards($boardId);
+
+        if (!$board) {
+            throw BoardNotFoundException::withId($boardId);
+        }
+
+        return $board;
     }
 
     public function create(?User $user, array $boardData): array
@@ -44,7 +54,7 @@ class BoardService
     private function ensureUserInOrganization(?User $user): void
     {
         if (!$user || !$user->currentOrganization) {
-            throw new \RuntimeException('User does not belong to any organization.');
+            throw new RuntimeException('User does not belong to any organization.');
         }
     }
 
@@ -56,7 +66,7 @@ class BoardService
         );
 
         if ($boardExist) {
-            throw new \RuntimeException('Board name already exists in this organization.');
+            throw new RuntimeException('Board name already exists in this organization.');
         }
     }
 }
