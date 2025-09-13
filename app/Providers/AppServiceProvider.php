@@ -41,7 +41,6 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(AuthService::class, function ($app) {
             return new AuthService(
                 $app->make(AuthDomainService::class),
-                $app->make('auth')
             );
         });
 
@@ -50,7 +49,6 @@ class AppServiceProvider extends ServiceProvider
                 $app->make(AuthRepositoryInterface::class),
                 $app->make(UserRepositoryInterface::class),
                 $app->make(UserRoleDomainService::class),
-                $app->make('auth'),
                 $app->make('hash')
             );
         });

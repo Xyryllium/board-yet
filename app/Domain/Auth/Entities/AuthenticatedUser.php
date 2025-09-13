@@ -8,7 +8,7 @@ use App\Domain\Auth\ValueObjects\UserRole;
 class AuthenticatedUser
 {
     public function __construct(
-        public readonly int $id,
+        public readonly int $userId,
         public readonly string $name,
         public readonly string $email,
         public readonly Token $token,
@@ -50,7 +50,7 @@ class AuthenticatedUser
     {
         return [
             'user' => [
-                'id' => $this->id,
+                'id' => $this->userId,
                 'name' => $this->name,
                 'email' => $this->email,
                 'role' => $this->role?->role,

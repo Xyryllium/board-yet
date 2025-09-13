@@ -2,6 +2,8 @@
 
 namespace App\Domain\Auth\ValueObjects;
 
+use InvalidArgumentException;
+
 class UserRole
 {
     public function __construct(
@@ -14,9 +16,9 @@ class UserRole
     private function validateRole(string $role): void
     {
         $validRoles = ['admin', 'member', 'owner', 'viewer'];
-        
+
         if (!in_array($role, $validRoles)) {
-            throw new \InvalidArgumentException("Invalid role: {$role}. Valid roles are: " . implode(', ', $validRoles));
+            throw new InvalidArgumentException("Invalid role: {$role}. Valid roles are: " . implode(', ', $validRoles));
         }
     }
 

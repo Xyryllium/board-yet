@@ -10,7 +10,6 @@ use App\Domain\Auth\Services\AuthDomainService;
 use App\Domain\Auth\ValueObjects\Credentials;
 use App\Domain\Auth\ValueObjects\Token;
 use App\Domain\Auth\ValueObjects\UserRole;
-use Illuminate\Contracts\Auth\Factory as AuthFactory;
 use Illuminate\Database\QueryException;
 use Illuminate\Validation\ValidationException;
 
@@ -18,7 +17,6 @@ class AuthService
 {
     public function __construct(
         private AuthDomainService $authDomainService,
-        private AuthFactory $authFactory,
     ) {
     }
 
@@ -93,7 +91,7 @@ class AuthService
         }
 
         return new AuthenticatedUser(
-            id: $user->id,
+            userId: $user->id,
             name: $user->name,
             email: $user->email,
             token: new Token(

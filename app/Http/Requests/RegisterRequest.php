@@ -23,7 +23,7 @@ class RegisterRequest extends FormRequest
     {
         $passwordRules = config('validation.password_rules', []);
         $passwordRules[] = 'same:confirmPassword';
-        
+
         return [
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
@@ -40,7 +40,8 @@ class RegisterRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'password.regex' => 'The password must contain at least one lowercase letter, one uppercase letter, one number, and one special character.',
+            'password.regex' => 'The password must contain at least one lowercase letter,
+                                    one uppercase letter, one number, and one special character.',
             'password.same' => 'The password and confirm password must match.',
         ];
     }

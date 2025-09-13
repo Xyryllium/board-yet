@@ -21,7 +21,7 @@ class AuthController extends Controller
     {
         try {
             $data = $request->validated();
-            
+
             $authenticatedUser = $this->authService->register($data);
 
             return response()->json([

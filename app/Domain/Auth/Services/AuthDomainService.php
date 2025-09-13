@@ -13,7 +13,6 @@ use App\Domain\Auth\ValueObjects\UserRole;
 use App\Domain\User\Entities\User;
 use App\Domain\User\Repositories\UserRepositoryInterface;
 use App\Domain\User\Services\UserRoleDomainService;
-use Illuminate\Contracts\Auth\Factory as AuthFactory;
 use Illuminate\Contracts\Hashing\Hasher;
 
 class AuthDomainService
@@ -21,8 +20,7 @@ class AuthDomainService
     public function __construct(
         private AuthRepositoryInterface $authRepository,
         private UserRepositoryInterface $userRepository,
-        private UserRoleDomainService $userRoleDomainService,
-        private AuthFactory $authFactory,
+        private UserRoleDomainService $userRoleService,
         private Hasher $hasher,
     ) {
     }
@@ -34,7 +32,7 @@ class AuthDomainService
         }
 
         $user = $this->authRepository->authenticate($credentials);
-        
+
         if (!$user) {
             throw new InvalidCredentialsException('Invalid email or password');
         }
@@ -43,7 +41,7 @@ class AuthDomainService
         $token = $this->createTokenForUser($user, $role);
 
         return new AuthenticatedUser(
-            id: $user->getId(),
+            userId: $user->getId(),
             name: $user->getName(),
             email: $user->getEmail(),
             token: $token,
@@ -60,19 +58,19 @@ class AuthDomainService
         );
 
         $savedEloquentUser = $this->userRepository->save($user);
-        
+
         $savedUser = new User(
             name: $savedEloquentUser->name,
             email: $savedEloquentUser->email,
             password: $savedEloquentUser->password,
             userId: $savedEloquentUser->id,
         );
-        
+
         $role = $this->getUserRole($savedUser);
         $token = $this->createTokenForUser($savedUser, $role);
 
         return new AuthenticatedUser(
-            id: $savedUser->getId(),
+            userId: $savedUser->getId(),
             name: $savedUser->getName(),
             email: $savedUser->getEmail(),
             token: $token,
@@ -97,7 +95,7 @@ class AuthDomainService
 
     private function getUserRole(User $user): ?UserRole
     {
-        return $this->userRoleDomainService->getUserRoleInCurrentOrganization($user->getId());
+        return $this->userRoleService->getUserRoleInCurrentOrganization($user->getId());
     }
 
     private function createTokenForUser(User $user, ?UserRole $role = null): Token

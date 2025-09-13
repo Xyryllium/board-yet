@@ -14,28 +14,28 @@ class UserRoleDomainService
 
     public function getUserRoleInCurrentOrganization(int $userId): ?UserRole
     {
-        $currentOrganizationId = $this->userRepository->getUserCurrentOrganizationId($userId);
-        
-        if (!$currentOrganizationId) {
+        $currentOrgId = $this->userRepository->getUserCurrentOrganizationId($userId);
+
+        if (!$currentOrgId) {
             return null;
         }
 
-        $role = $this->userRepository->getUserRoleInOrganization($userId, $currentOrganizationId);
-        
+        $role = $this->userRepository->getUserRoleInOrganization($userId, $currentOrgId);
+
         if (!$role) {
             return null;
         }
 
         return new UserRole(
             role: $role,
-            organizationId: $currentOrganizationId
+            organizationId: $currentOrgId
         );
     }
 
     public function getUserRoleInOrganization(int $userId, int $organizationId): ?UserRole
     {
         $role = $this->userRepository->getUserRoleInOrganization($userId, $organizationId);
-        
+
         if (!$role) {
             return null;
         }
@@ -54,7 +54,7 @@ class UserRoleDomainService
     public function hasRoleInOrganization(int $userId, int $organizationId, string $requiredRole): bool
     {
         $userRole = $this->getUserRoleInOrganization($userId, $organizationId);
-        
+
         if (!$userRole) {
             return false;
         }
