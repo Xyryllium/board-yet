@@ -28,21 +28,14 @@ class ColumnController extends Controller
         }
     }
 
-    public function store(Request $request, int $boardId): JsonResponse
+    public function store(Request $request): JsonResponse
     {
         try {
-            $data = $request->validate([
-                'name' => 'required|string|min:3|max:255',
-            ]);
+            if ($this->isBulkRequest($request)) {
+                return $this->storeBulkColumns($request);
+            }
 
-            $data['board_id'] = $boardId;
-
-            $column = $this->columnService->create(auth()->user(), $data);
-
-            return response()->json([
-                'message' => 'Column created successfully!',
-                'data' => $column
-            ], 201);
+            return $this->storeSingleColumn($request);
         } catch (\RuntimeException $e) {
             return response()->json([
                 'error' => $e->getMessage()
@@ -50,28 +43,77 @@ class ColumnController extends Controller
         }
     }
 
-    public function update(Request $request, Board $board): JsonResponse
+    public function update(Request $request, int $columnId): JsonResponse
     {
         try {
             $data = $request->validate([
+                'boardId' => 'required|integer|exists:boards,id',
                 'name' => 'required|string|min:3|max:255',
-                'id' => 'required|integer|exists:columns,id',
                 'order' => 'sometimes|integer',
             ]);
 
-            $data['board_id'] = $board->id;
+            $data['id'] = $columnId;
 
-            $column = $this->columnService->update(
+            $updatedColumn = $this->columnService->update(
                 auth()->user(),
                 $data,
             );
 
             return response()->json([
                 'message' => 'Column updated successfully!',
-                'data' => $column
+                'data' => $updatedColumn
             ], 200);
         } catch (\RuntimeException $e) {
             return response()->json(['message' => $e->getMessage()], 403);
         }
+    }
+
+    private function isBulkRequest(Request $request): bool
+    {
+        return $request->has('columns') && is_array($request->columns);
+    }
+
+    private function storeBulkColumns(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'boardId' => 'required|integer|exists:boards,id',
+            'columns' => 'required|array|min:1',
+            'columns.*.name' => 'required|string|min:3|max:255',
+            'columns.*.order' => 'sometimes|integer|min:0',
+        ]);
+
+        $columnsData = $this->prepareBulkColumnsData($data['columns'], $data['boardId']);
+        $columns = $this->columnService->createBulk(auth()->user(), $columnsData);
+
+        return response()->json([
+            'message' => 'Columns created successfully!',
+            'data' => $columns
+        ], 201);
+    }
+
+    private function storeSingleColumn(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'boardId' => 'required|integer|exists:boards,id',
+            'name' => 'required|string|min:3|max:255',
+        ]);
+
+        $column = $this->columnService->create(auth()->user(), $data);
+
+        return response()->json([
+            'message' => 'Column created successfully!',
+            'data' => $column
+        ], 201);
+    }
+
+    private function prepareBulkColumnsData(array $columns, int $boardId): array
+    {
+        return array_map(function ($column) use ($boardId) {
+            return [
+                'name' => $column['name'],
+                'order' => $column['order'] ?? null,
+                'boardId' => $boardId,
+            ];
+        }, $columns);
     }
 }

@@ -27,10 +27,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{id}', [BoardController::class, 'update']);
 
         Route::get('/{id}/columns', [ColumnController::class, 'index']);
-        Route::post('/{id}/columns', [ColumnController::class, 'store']);
-        Route::put('/{board}/columns', [ColumnController::class, 'update']);
     });
     Route::prefix('columns')->group(function () {
+        Route::post('/', [ColumnController::class, 'store']);
+        Route::put('/columns/{id}', [ColumnController::class, 'update']);
         Route::get('/{columnId}/cards', [CardController::class, 'index']);
         Route::post('/{columnId}/cards', [CardController::class, 'store']);
     });
