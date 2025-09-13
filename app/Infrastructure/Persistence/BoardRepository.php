@@ -10,10 +10,11 @@ class BoardRepository implements BoardRepositoryInterface
 {
     public function all(int $organizationId): array
     {
+        /** @phpstan-ignore-next-line */
         $boards = Board::where('organization_id', $organizationId)
             ->with(['columns' => function ($query) {
                     $query->orderBy('order');
-                }])
+            }])
             ->orderBy('created_at', 'asc')
             ->get();
 

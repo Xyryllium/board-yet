@@ -16,7 +16,7 @@ class BoardController extends Controller
     public function index(): JsonResponse
     {
         $boards = $this->boardService->list(auth()->user());
-        
+
         return response()->json([
             'success' => true,
             'data' => $boards,
