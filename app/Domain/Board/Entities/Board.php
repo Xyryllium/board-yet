@@ -61,8 +61,8 @@ class Board
             'name'  => $this->name,
             'description' => $this->description,
             'columns' => $this->columns,
-            'created_at' => $this->createdAt?->format('Y-m-d H:i:s'),
-            'updated_at' => $this->updatedAt?->format('Y-m-d H:i:s'),
+            'created_at' => $this->createdAt?->format('c'),
+            'updated_at' => $this->updatedAt?->format('c'),
         ];
     }
 }

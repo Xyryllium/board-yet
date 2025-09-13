@@ -16,8 +16,11 @@ class BoardController extends Controller
     public function index(): JsonResponse
     {
         $boards = $this->boardService->list(auth()->user());
+
         return response()->json([
-            'data' => $boards
+            'success' => true,
+            'data' => $boards,
+            'message' => 'Boards retrieved successfully',
         ], 200);
     }
 
@@ -25,7 +28,9 @@ class BoardController extends Controller
     {
         $board = $this->boardService->getBoardWithCards($boardId);
         return response()->json([
-            'data' => $board
+            'success' => true,
+            'data' => $board,
+            'message' => 'Board retrieved successfully'
         ], 200);
     }
 
@@ -38,11 +43,15 @@ class BoardController extends Controller
 
             $board = $this->boardService->create(auth()->user(), $data);
             return response()->json([
-                'message' => 'Board created successfully!',
-                'data' => $board
+                'success' => true,
+                'data' => $board,
+                'message' => 'Board created successfully!'
             ], 201);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 400);
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 400);
         }
     }
 
@@ -60,11 +69,15 @@ class BoardController extends Controller
             );
 
             return response()->json([
-                'message' => 'Board updated successfully!',
-                'data' => $board
+                'success' => true,
+                'data' => $board,
+                'message' => 'Board updated successfully!'
             ], 200);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 400);
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 400);
         }
     }
 }
