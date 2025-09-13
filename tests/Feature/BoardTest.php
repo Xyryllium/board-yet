@@ -65,7 +65,7 @@ describe('Board Management', function () {
             ->assertStatus(200)
             ->assertJsonStructure([
                 'data' => [
-                    '*' => ['name', 'boardId']
+                    '*' => ['name', 'id']
                 ]
             ])
             ->assertJsonCount(3, 'data');

@@ -10,10 +10,15 @@ class BoardRepository implements BoardRepositoryInterface
 {
     public function all(int $organizationId): array
     {
-        $boards = Board::where('organization_id', $organizationId)->get();
+        $boards = Board::where('organization_id', $organizationId)
+            ->with(['columns' => function ($query) {
+                    $query->orderBy('order');
+                }])
+            ->orderBy('created_at', 'asc')
+            ->get();
 
         return $boards->map(function ($board) {
-            return $this->toDomain($board);
+            return $this->toDomain($board)->toArray();
         })->toArray();
     }
 
@@ -90,8 +95,8 @@ class BoardRepository implements BoardRepositoryInterface
                         'order' => $card->order,
                 ])->toArray() ?? [],
             ])->toArray() ?? [],
-            'created_at' => $board->created_at,
-            'updated_at' => $board->updated_at,
+            'created_at' => $board->created_at?->toISOString(),
+            'updated_at' => $board->updated_at?->toISOString(),
         ]);
     }
 }
