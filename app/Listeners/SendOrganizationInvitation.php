@@ -21,13 +21,13 @@ class SendOrganizationInvitation implements ShouldQueue
     public function handle(OrganizationInvitationSent $event): void
     {
         $invitation = $event->invitation;
-        
+
         Log::channel('organization')->info("SendOrganizationInvitation listener started", [
             'invitation_id' => $invitation->id,
             'email' => $invitation->email,
             'listener_attempt' => $this->attempts(),
         ]);
-        
+
         $cacheKey = "invitation_email_sent_{$invitation->id}";
 
         if (cache()->has($cacheKey)) {
@@ -37,10 +37,10 @@ class SendOrganizationInvitation implements ShouldQueue
             ]);
             return;
         }
-        
+
         try {
             Mail::to($invitation->email)->send(new OrganizationInvitationMail($invitation));
-            
+
             cache()->put($cacheKey, true, now()->addHours(24));
 
             Log::channel('organization')->info("Invitation email sent successfully", [

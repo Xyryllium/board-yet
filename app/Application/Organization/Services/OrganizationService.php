@@ -112,5 +112,4 @@ class OrganizationService
 
         $this->invitationRepository->updateStatus($token, InvitationStatus::ACCEPTED->value);
     }
-
 }
