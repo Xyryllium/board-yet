@@ -30,7 +30,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::prefix('columns')->group(function () {
         Route::post('/', [ColumnController::class, 'store']);
-        Route::put('/columns/{id}', [ColumnController::class, 'update']);
+        Route::put('/{id}', [ColumnController::class, 'update']);
         Route::get('/{columnId}/cards', [CardController::class, 'index']);
         Route::post('/{columnId}/cards', [CardController::class, 'store']);
     });
