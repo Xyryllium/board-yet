@@ -32,23 +32,30 @@ class OrganizationInvitationRepository implements OrgInvitationRepositoryInterfa
 
     public function findOrgDetailsByToken(string $token): array
     {
+        /** @var OrganizationInvitation|null $invitation */
         $invitation = OrganizationInvitation::with('organization.owner')
             ->where('token', $token)
             ->first();
 
-        if (!$invitation) {
+        if (!$invitation || !$invitation->organization) {
             return [];
         }
 
+        /** @var \App\Models\Organization $organization */
+        $organization = $invitation->organization;
+        
+        /** @var \App\Models\User|null $owner */
+        $owner = $organization->owner;
+
         return [
             'organization' => [
-                'id' => $invitation->organization->id,
-                'name' => $invitation->organization->name,
-                'owner' => [
-                    'id' => $invitation->organization->owner->id,
-                    'name' => $invitation->organization->owner->name,
-                    'email' => $invitation->organization->owner->email,
-                ],
+                'id' => $organization->id,
+                'name' => $organization->name,
+                'owner' => $owner ? [
+                    'id' => $owner->id,
+                    'name' => $owner->name,
+                    'email' => $owner->email,
+                ] : null,
             ],
         ];
     }

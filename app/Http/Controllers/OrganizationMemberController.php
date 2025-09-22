@@ -40,9 +40,11 @@ class OrganizationMemberController extends Controller
                 'token' => 'required|string',
             ]);
 
+            /** @var \App\Models\User|null $user */
+            $user = auth('sanctum')->user();
             $this->service->acceptInvitation(
                 $data['token'],
-                auth('sanctum')->user()
+                $user
             );
 
             return response()->json([

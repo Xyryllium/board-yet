@@ -118,7 +118,7 @@ class OrganizationService
     {
         $organization = $this->invitationRepository->findOrgDetailsByToken($token);
 
-        if(!$organization)  {
+        if (!$organization) {
             throw new OrganizationNotFoundException();
         }
 
