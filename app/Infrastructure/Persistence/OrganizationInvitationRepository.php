@@ -43,7 +43,7 @@ class OrganizationInvitationRepository implements OrgInvitationRepositoryInterfa
 
         /** @var \App\Models\Organization $organization */
         $organization = $invitation->organization;
-        
+
         /** @var \App\Models\User|null $owner */
         $owner = $organization->owner;
 
