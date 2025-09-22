@@ -56,6 +56,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Frontend Application URL
+    |--------------------------------------------------------------------------
+    |
+    | This URL is used for generating frontend application URLs, such as
+    | invitation acceptance links that should redirect to your frontend app
+    | instead of the Laravel backend.
+    |
+    */
+
+    'frontend_url' => env('VITE_APP_URL', 'http://localhost:3000'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

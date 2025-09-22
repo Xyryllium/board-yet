@@ -12,7 +12,7 @@ You have been invited to join **{{ $invitation->organization->name }}** as a **{
 
 You've been invited to collaborate on boards, manage projects, and work together with your team members.
 
-@component('mail::button', ['url' => url("/invitations/accept/{$invitation->token}")])
+@component('mail::button', ['url' => config('app.frontend_url') . "/invitations/accept/{$invitation->token}"])
 Accept Invitation
 @endcomponent
 
