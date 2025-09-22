@@ -62,20 +62,29 @@ describe('Column Management', function () {
 
     it('can create a column with authenticated user', function () {
         $response = $this->actingAs($this->user)
-            ->postJson("/api/boards/{$this->board->id}/columns", [
-            'name' => 'New Column',
+            ->postJson("/api/columns", [
+                'boardId' => $this->board->id,
+                'columns' => [
+                    [
+                        'id' => 1,
+                        'name' => 'New Column',
+                        'order' => 1,
+                    ],
+                ],
         ]);
 
         $response
             ->assertStatus(201)
             ->assertJson([
-                'message' => 'Column created successfully!',
+                'message' => 'Columns created successfully!',
                 'data' => [
-                    'id' => $response->json('data.id'),
-                    'name' => 'New Column',
-                    'order' => 1,
-                    'created_at' => $response->json('data.created_at'),
-                    'updated_at' => $response->json('data.updated_at'),
+                    [
+                        'id' => $response->json('data.0.id'),
+                        'name' => 'New Column',
+                        'order' => 1,
+                        'created_at' => $response->json('data.0.created_at'),
+                        'updated_at' => $response->json('data.0.updated_at'),
+                    ],
                 ],
             ]);
     });
@@ -89,8 +98,15 @@ describe('Column Management', function () {
         ]);
 
         $response = $this->actingAs($this->user)
-            ->postJson("/api/boards/{$otherBoard->id}/columns", [
-            'name' => 'New Column',
+            ->postJson("/api/columns", [
+                'boardId' => $otherBoard->id,
+                'columns' => [
+                    [
+                        'id' => 1,
+                        'name' => 'New Column',
+                        'order' => 1,
+                    ],
+                ],
         ]);
 
         $response
@@ -101,8 +117,15 @@ describe('Column Management', function () {
     });
 
     it('cannot create a column with unauthenticated user', function () {
-        $response = $this->postJson("/api/boards/{$this->board->id}/columns", [
-            'name' => 'New Column',
+        $response = $this->postJson("/api/columns", [
+            'boardId' => $this->board->id,
+            'columns' => [
+                [
+                    'id' => 1,
+                    'name' => 'New Column',
+                    'order' => 1,
+                ],
+            ],
         ]);
 
         $response
@@ -117,10 +140,10 @@ describe('Column Management', function () {
         ]);
 
         $response = $this->actingAs($this->user)
-            ->putJson("/api/boards/{$this->board->id}/columns", [
-            'id' => $column->id,
-            'name' => 'Updated Column',
-            'order' => 2,
+            ->putJson("/api/columns/$column->id", [
+                'boardId' => $this->board->id,
+                'name' => 'Updated Column',
+                'order' => 2,
         ]);
 
         $response
@@ -151,8 +174,8 @@ describe('Column Management', function () {
         ]);
 
         $response = $this->actingAs($this->user)
-            ->putJson("/api/boards/{$otherBoard->id}/columns", [
-            'id' => $column->id,
+            ->putJson("/api/columns/$column->id", [
+            'boardId' => $otherBoard->id,
             'name' => 'Updated Column',
             'order' => 2,
         ]);

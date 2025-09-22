@@ -24,16 +24,39 @@ class ColumnService
 
     public function create(User $user, array $columnData): array
     {
-        $this->ensureUserCanAccessBoard($user, $columnData['board_id']);
+        $this->ensureUserCanAccessBoard($user, $columnData['boardId']);
 
-        $columnData['order'] = $this->columnRepository->fetchMaxOrderInBoard($columnData['board_id']);
+        $columnData['order'] = $this->columnRepository->fetchMaxOrderInBoard($columnData['boardId']);
+        $columnData['board_id'] = $columnData['boardId'];
 
         return $this->columnRepository->create($columnData);
     }
 
+    public function createBulk(User $user, array $columnsData): array
+    {
+        if (empty($columnsData)) {
+            return [];
+        }
+
+        $boardId = $columnsData[0]['boardId'];
+        $this->ensureUserCanAccessBoard($user, $boardId);
+
+        $maxOrder = $this->columnRepository->fetchMaxOrderInBoard($boardId);
+        foreach ($columnsData as $index => &$columnData) {
+            if (!isset($columnData['order'])) {
+                $columnData['order'] = $maxOrder + $index;
+            }
+            $columnData['board_id'] = $boardId;
+        }
+
+        return $this->columnRepository->createBulk($columnsData);
+    }
+
     public function update(?User $user, array $columnData): array
     {
-        $this->ensureUserCanAccessBoard($user, $columnData['board_id']);
+        $this->ensureUserCanAccessBoard($user, $columnData['boardId']);
+
+        $columnData['board_id'] = $columnData['boardId'];
 
         return $this->columnRepository->update($columnData);
     }

@@ -29,6 +29,18 @@ class ColumnRepository implements ColumnRepositoryInterface
         return $this->toDomain($column)->toArray();
     }
 
+    public function createBulk(array $columnsData): array
+    {
+        $createdColumns = [];
+
+        foreach ($columnsData as $columnData) {
+            $column = BoardColumn::create($columnData);
+            $createdColumns[] = $this->toDomain($column)->toArray();
+        }
+
+        return $createdColumns;
+    }
+
     public function update(array $columnData): array
     {
         $column = BoardColumn::where('id', $columnData['id'])
