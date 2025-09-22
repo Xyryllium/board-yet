@@ -10,4 +10,5 @@ interface OrgInvitationRepositoryInterface
     public function create(OrganizationInvitation $data): ModelsOrganizationInvitation;
     public function findByToken(string $token): ?ModelsOrganizationInvitation;
     public function updateStatus(string $token, string $status): void;
+    public function findOrgDetailsByToken(string $token): array;
 }

@@ -1,16 +1,33 @@
 @component('mail::message')
-# You're Invited!
+# 🎉 You're Invited!
 
-You have been invited to join the organization **{{ $invitation->organization->name }}** as a **{{ ucfirst($invitation->role) }}**.
+You have been invited to join **{{ $invitation->organization->name }}** as a **{{ ucfirst($invitation->role) }}**.
 
-Click the button below to accept your invitation:
+## Organization Details
 
-@component('mail::button', ['url' => url("/invitations/accept/{$invitation->token}")])
+| **Organization** | {{ $invitation->organization->name }} |
+|------------------|--------------------------------------|
+| **Your Role**    | {{ ucfirst($invitation->role) }}     |
+| **Invited By**   | {{ config('app.name') }}             |
+
+You've been invited to collaborate on boards, manage projects, and work together with your team members.
+
+@component('mail::button', ['url' => config('app.frontend_url') . "/invitations/accept/{$invitation->token}"])
 Accept Invitation
 @endcomponent
 
-If you did not expect this invitation, you may ignore this email.
+---
+
+## ⚠️ Important Security Note
+
+This invitation link is unique to you and will expire in 7 days. If you didn't expect this invitation, you can safely ignore this email.
+
+---
+
+**This invitation was sent by {{ config('app.name') }}**
+
+If you have any questions, please contact your team administrator.
 
 Thanks,  
-{{ config('app.name') }}
+{{ config('app.name') }} Team
 @endcomponent

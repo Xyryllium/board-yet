@@ -13,6 +13,9 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/organizations/invitations/accept',
     [OrganizationMemberController::class, 'acceptInvitation']
 );
+Route::get('/organizations/invitations/details/{id}', 
+    [OrganizationMemberController::class, 'listOrgDetails']
+);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);

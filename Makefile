@@ -12,6 +12,15 @@ stop:
 composer-install:
 	docker compose exec app composer install
 
+clear-cache:
+	$(ARTISAN) cache:clear
+	$(ARTISAN) config:clear
+	$(ARTISAN) route:clear
+	$(ARTISAN) view:clear
+	
+artisan:
+	$(ARTISAN) $(word 2, $(MAKECMDGOALS))
+
 migrate:
 	$(ARTISAN) migrate
 

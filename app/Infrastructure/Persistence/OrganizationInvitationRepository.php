@@ -29,4 +29,34 @@ class OrganizationInvitationRepository implements OrgInvitationRepositoryInterfa
         OrganizationInvitation::where('token', $token)
             ->update(['status' => $status]);
     }
+
+    public function findOrgDetailsByToken(string $token): array
+    {
+        /** @var OrganizationInvitation|null $invitation */
+        $invitation = OrganizationInvitation::with('organization.owner')
+            ->where('token', $token)
+            ->first();
+
+        if (!$invitation || !$invitation->organization) {
+            return [];
+        }
+
+        /** @var \App\Models\Organization $organization */
+        $organization = $invitation->organization;
+
+        /** @var \App\Models\User|null $owner */
+        $owner = $organization->owner;
+
+        return [
+            'organization' => [
+                'id' => $organization->id,
+                'name' => $organization->name,
+                'owner' => $owner ? [
+                    'id' => $owner->id,
+                    'name' => $owner->name,
+                    'email' => $owner->email,
+                ] : null,
+            ],
+        ];
+    }
 }

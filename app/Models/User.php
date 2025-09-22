@@ -68,7 +68,7 @@ class User extends Authenticatable
     public function joinOrganization(int $organizationId, string $role): void
     {
         $this->organizations()->attach($organizationId, ['role' => $role]);
-        //TODO: decide if we want to switch current organization on join
         $this->current_organization_id = $organizationId;
+        $this->save();
     }
 }
