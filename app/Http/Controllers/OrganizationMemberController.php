@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Exception;
 use App\Application\Organization\Services\OrganizationService;
 use App\Domain\User\Exceptions\UserNotRegisteredException;
 use Illuminate\Http\JsonResponse;
@@ -41,7 +42,7 @@ class OrganizationMemberController extends Controller
 
             $this->service->acceptInvitation(
                 $data['token'],
-                auth()->user()
+                auth('sanctum')->user()
             );
 
             return response()->json([
@@ -54,11 +55,27 @@ class OrganizationMemberController extends Controller
                 'status' => 'user_not_registered',
                 'email' => $userException->email,
                 'token' => $userException->token,
-            ], 400);
-        } catch (\Exception $e) {
+            ], 200);
+        } catch (Exception $e) {
             return response()->json([
                 'message' => $e->getMessage(),
                 'status' => 'error',
+            ], 400);
+        }
+    }
+
+    public function listOrgDetails(string $token): JsonResponse
+    {
+        try {
+            $organization = $this->service->listOrgDetails($token);
+
+            return response()->json([
+                'data' => $organization
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'status' => 'error'
             ], 400);
         }
     }

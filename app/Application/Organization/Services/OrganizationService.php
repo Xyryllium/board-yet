@@ -6,6 +6,7 @@ use Exception;
 use RuntimeException;
 use App\Domain\Organization\Entities\OrganizationInvitation;
 use App\Domain\Organization\Enums\InvitationStatus;
+use App\Domain\Organization\Exceptions\OrganizationNotFoundException;
 use App\Domain\Organization\Repositories\OrganizationRepositoryInterface;
 use App\Domain\Organization\Repositories\OrgInvitationRepositoryInterface;
 use App\Domain\Organization\Services\OrganizationDomainService;
@@ -111,5 +112,16 @@ class OrganizationService
         $user->joinOrganization($invitation->organization_id, $invitation->role);
 
         $this->invitationRepository->updateStatus($token, InvitationStatus::ACCEPTED->value);
+    }
+
+    public function listOrgDetails(string $token): array
+    {
+        $organization = $this->invitationRepository->findOrgDetailsByToken($token);
+
+        if(!$organization)  {
+            throw new OrganizationNotFoundException();
+        }
+
+        return $organization;
     }
 }

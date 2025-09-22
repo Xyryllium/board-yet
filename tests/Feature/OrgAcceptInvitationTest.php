@@ -95,7 +95,7 @@ test('a unregistered user can accept invitation and has not registered status ',
             'token' => $invitation->token,
     ]);
 
-    $response->assertStatus(400)
+    $response->assertStatus(200)
              ->assertJson([
                  'message' => 'User is not registered.',
                  'status' => 'user_not_registered',
