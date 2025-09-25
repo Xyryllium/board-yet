@@ -5,6 +5,7 @@ namespace App\Application\Organization\Services;
 use Exception;
 use RuntimeException;
 use App\Domain\Organization\Entities\OrganizationInvitation;
+use App\Domain\Organization\Entities\Organization as EntitiesOrganization;
 use App\Domain\Organization\Enums\InvitationStatus;
 use App\Domain\Organization\Exceptions\OrganizationNotFoundException;
 use App\Domain\Organization\Repositories\OrganizationRepositoryInterface;
@@ -123,5 +124,10 @@ class OrganizationService
         }
 
         return $organization;
+    }
+
+    public function findBySubdomain(string $subdomain): ?EntitiesOrganization
+    {
+        return $this->orgRepository->findBySubdomain($subdomain);
     }
 }

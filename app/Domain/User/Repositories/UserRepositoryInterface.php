@@ -13,4 +13,5 @@ interface UserRepositoryInterface
     public function getUserRoleInOrganization(int $userId, int $organizationId): ?string;
     public function getUserCurrentOrganizationId(int $userId): ?int;
     public function getUserOrganizations(int $userId): array;
+    public function getUsersByOrganizationId(User $user, int $organizationId): array;
 }

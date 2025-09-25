@@ -13,6 +13,7 @@ class AuthenticatedUser
         public readonly string $email,
         public readonly Token $token,
         public readonly ?UserRole $role = null,
+        public readonly ?string $subdomain = null,
     ) {
     }
 
@@ -55,6 +56,7 @@ class AuthenticatedUser
                 'email' => $this->email,
                 'role' => $this->role?->role,
                 'organization_id' => $this->role?->organizationId,
+                'subdomain' => $this->subdomain,
             ],
             'token' => $this->token->plainTextToken,
         ];

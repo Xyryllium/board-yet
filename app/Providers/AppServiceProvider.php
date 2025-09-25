@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Application\Auth\Services\AuthService;
+use App\Application\Auth\Services\SessionService;
 use App\Domain\Auth\Repositories\AuthRepositoryInterface;
 use App\Domain\Auth\Services\AuthDomainService;
 use App\Domain\Board\Repositories\BoardRepositoryInterface;
@@ -38,9 +39,16 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(CardRepositoryInterface::class, CardRepository::class);
         $this->app->bind(AuthRepositoryInterface::class, AuthRepository::class);
 
+        $this->app->bind(SessionService::class, function ($app) {
+            return new SessionService(
+                $app->make(AuthRepositoryInterface::class)
+            );
+        });
+
         $this->app->bind(AuthService::class, function ($app) {
             return new AuthService(
                 $app->make(AuthDomainService::class),
+                $app->make(SessionService::class),
             );
         });
 
@@ -49,6 +57,7 @@ class AppServiceProvider extends ServiceProvider
                 $app->make(AuthRepositoryInterface::class),
                 $app->make(UserRepositoryInterface::class),
                 $app->make(UserRoleDomainService::class),
+                $app->make(OrganizationRepositoryInterface::class),
                 $app->make('hash')
             );
         });

@@ -4,18 +4,19 @@ namespace App\Application\User\Services;
 
 use App\Domain\User\Entities\User;
 use App\Domain\User\Repositories\UserRepositoryInterface;
+use App\Domain\User\Services\UserRoleDomainService;
+use App\Domain\Organization\Repositories\OrganizationRepositoryInterface;
 use App\Models\User as EloquentUser;
 use Illuminate\Contracts\Hashing\Hasher;
 
 class UserService
 {
-    protected UserRepositoryInterface $userRepository;
-    protected Hasher $hasher;
-
-    public function __construct(UserRepositoryInterface $userRepository, Hasher $hasher)
-    {
-        $this->userRepository = $userRepository;
-        $this->hasher = $hasher;
+    public function __construct(
+        protected UserRepositoryInterface $userRepository,
+        protected Hasher $hasher,
+        protected UserRoleDomainService $userRoleService,
+        protected OrganizationRepositoryInterface $orgRepository
+    ) {
     }
 
     public function create(array $userData): EloquentUser
@@ -27,5 +28,29 @@ class UserService
         );
 
         return $this->userRepository->save($user);
+    }
+
+    public function getUsersByOrganizationId(User $user, int $organizationId): array
+    {
+        return $this->userRepository->getUsersByOrganizationId($user, $organizationId);
+    }
+
+    public function getCurrentUser(EloquentUser $eloquentUser): array
+    {
+        $userRole = $this->userRoleService->getUserRoleInCurrentOrganization($eloquentUser->id);
+
+        $currentOrganization = null;
+        if ($eloquentUser->current_organization_id) {
+            $currentOrganization = $this->orgRepository->findById($eloquentUser->current_organization_id);
+        }
+
+        return [
+            'id' => $eloquentUser->id,
+            'name' => $eloquentUser->name,
+            'email' => $eloquentUser->email,
+            'role' => $userRole?->role,
+            'organization_id' => $currentOrganization?->organizationId,
+            'subdomain' => $currentOrganization?->subdomain,
+        ];
     }
 }

@@ -13,6 +13,13 @@ interface AuthRepositoryInterface
 
     public function createToken(User $user, ?string $role = null, ?int $organizationId = null): Token;
 
+    public function createTokenWithExpiration(
+        int $userId,
+        ?string $role = null,
+        ?int $organizationId = null,
+        int $expirationDays = 7
+    ): Token;
+
     public function revokeToken(string $token): bool;
 
     public function revokeAllUserTokens(int $userId): bool;

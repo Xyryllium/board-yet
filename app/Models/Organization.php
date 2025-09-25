@@ -12,7 +12,13 @@ class Organization extends Model
 
     protected $fillable = [
         'name',
-        'owner_id'
+        'owner_id',
+        'subdomain',
+        'settings'
+    ];
+
+    protected $casts = [
+        'settings' => 'array',
     ];
 
     public function owner(): BelongsTo

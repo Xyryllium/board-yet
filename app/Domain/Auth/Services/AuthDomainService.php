@@ -13,6 +13,7 @@ use App\Domain\Auth\ValueObjects\UserRole;
 use App\Domain\User\Entities\User;
 use App\Domain\User\Repositories\UserRepositoryInterface;
 use App\Domain\User\Services\UserRoleDomainService;
+use App\Domain\Organization\Repositories\OrganizationRepositoryInterface;
 use Illuminate\Contracts\Hashing\Hasher;
 
 class AuthDomainService
@@ -21,6 +22,7 @@ class AuthDomainService
         private AuthRepositoryInterface $authRepository,
         private UserRepositoryInterface $userRepository,
         private UserRoleDomainService $userRoleService,
+        private OrganizationRepositoryInterface $orgRepository,
         private Hasher $hasher,
     ) {
     }
@@ -37,8 +39,13 @@ class AuthDomainService
             throw new InvalidCredentialsException('Invalid email or password');
         }
 
+        if (!$this->hasher->check($credentials->password, $user->getPassword())) {
+            throw new InvalidCredentialsException('Invalid email or password');
+        }
+
         $role = $this->getUserRole($user);
         $token = $this->createTokenForUser($user, $role);
+        $subdomain = $this->getOrganizationSubdomain($role?->organizationId);
 
         return new AuthenticatedUser(
             userId: $user->getId(),
@@ -46,6 +53,7 @@ class AuthDomainService
             email: $user->getEmail(),
             token: $token,
             role: $role,
+            subdomain: $subdomain,
         );
     }
 
@@ -68,6 +76,7 @@ class AuthDomainService
 
         $role = $this->getUserRole($savedUser);
         $token = $this->createTokenForUser($savedUser, $role);
+        $subdomain = $this->getOrganizationSubdomain($role?->organizationId);
 
         return new AuthenticatedUser(
             userId: $savedUser->getId(),
@@ -75,6 +84,7 @@ class AuthDomainService
             email: $savedUser->getEmail(),
             token: $token,
             role: $role,
+            subdomain: $subdomain,
         );
     }
 
@@ -96,6 +106,16 @@ class AuthDomainService
     private function getUserRole(User $user): ?UserRole
     {
         return $this->userRoleService->getUserRoleInCurrentOrganization($user->getId());
+    }
+
+    private function getOrganizationSubdomain(?int $organizationId): ?string
+    {
+        if (!$organizationId) {
+            return null;
+        }
+
+        $organization = $this->orgRepository->findById($organizationId);
+        return $organization?->getSubdomain();
     }
 
     private function createTokenForUser(User $user, ?UserRole $role = null): Token
