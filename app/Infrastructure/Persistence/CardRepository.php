@@ -26,7 +26,7 @@ class CardRepository implements CardRepositoryInterface
     {
         $cardModel = Card::updateOrCreate(['id' => $card->cardId], $card->toArray());
 
-        return $this->toDomain($cardModel->fresh());
+        return $this->toDomain($cardModel);
     }
 
     public function delete(EntitiesCard $card): void

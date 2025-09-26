@@ -24,9 +24,13 @@ describe('Column Management', function () {
             'current_organization_id' => $this->organization->id,
         ]);
 
+        $this->organization->users()->attach($this->user->id, ['role' => 'admin']);
+
         $this->board = Board::factory()->create([
             'organization_id' => $this->organization->id,
         ]);
+
+        $this->token = $this->user->createToken('test-token')->plainTextToken;
     });
 
     it('can list columns based on board', function () {
@@ -34,7 +38,7 @@ describe('Column Management', function () {
             'board_id' => $this->board->id,
         ]);
         
-        $response = $this->actingAs($this->user)
+        $response = $this->withApiToken($this->token)
                     ->getJson("/api/boards/{$this->board->id}/columns");
 
         $response
@@ -50,7 +54,7 @@ describe('Column Management', function () {
             'organization_id' => $otherOrganization->id,
         ]);
 
-        $response = $this->actingAs($this->user)
+        $response = $this->withApiToken($this->token)
                     ->getJson("/api/boards/{$otherBoard->id}/columns");
 
         $response
@@ -61,7 +65,7 @@ describe('Column Management', function () {
     });
 
     it('can create a column with authenticated user', function () {
-        $response = $this->actingAs($this->user)
+        $response = $this->withApiToken($this->token)
             ->postJson("/api/columns", [
                 'boardId' => $this->board->id,
                 'columns' => [
@@ -97,7 +101,7 @@ describe('Column Management', function () {
             'organization_id' => $otherOrganization->id,
         ]);
 
-        $response = $this->actingAs($this->user)
+        $response = $this->withApiToken($this->token)
             ->postJson("/api/columns", [
                 'boardId' => $otherBoard->id,
                 'columns' => [
@@ -139,7 +143,7 @@ describe('Column Management', function () {
             'order' => 1,
         ]);
 
-        $response = $this->actingAs($this->user)
+        $response = $this->withApiToken($this->token)
             ->putJson("/api/columns/$column->id", [
                 'boardId' => $this->board->id,
                 'name' => 'Updated Column',
@@ -173,7 +177,7 @@ describe('Column Management', function () {
             'order' => 1,
         ]);
 
-        $response = $this->actingAs($this->user)
+        $response = $this->withApiToken($this->token)
             ->putJson("/api/columns/$column->id", [
             'boardId' => $otherBoard->id,
             'name' => 'Updated Column',
@@ -184,6 +188,148 @@ describe('Column Management', function () {
             ->assertStatus(403)
             ->assertJson([
                 'message' => 'User does not have access to this board.'
+            ]);
+    });
+
+    it('can reorder columns with authenticated user', function () {
+        $column1 = BoardColumn::factory()->create([
+            'board_id' => $this->board->id,
+            'name' => 'Column 1',
+            'order' => 0,
+        ]);
+        $column2 = BoardColumn::factory()->create([
+            'board_id' => $this->board->id,
+            'name' => 'Column 2',
+            'order' => 1,
+        ]);
+        $column3 = BoardColumn::factory()->create([
+            'board_id' => $this->board->id,
+            'name' => 'Column 3',
+            'order' => 2,
+        ]);
+
+        $response = $this->withApiToken($this->token)
+            ->putJson("/api/columns/reorder", [
+                'boardId' => $this->board->id,
+                'columns' => [
+                    ['id' => $column1->id, 'order' => 2],
+                    ['id' => $column2->id, 'order' => 0],
+                    ['id' => $column3->id, 'order' => 1],
+                ],
+            ]);
+
+        $response
+            ->assertStatus(200)
+            ->assertJson([
+                'message' => 'Columns reordered successfully!',
+                'data' => [
+                    ['id' => $column1->id, 'order' => 2],
+                    ['id' => $column2->id, 'order' => 0],
+                    ['id' => $column3->id, 'order' => 1],
+                ],
+            ]);
+
+        $this->assertDatabaseHas('columns', [
+            'id' => $column1->id,
+            'order' => 2,
+        ]);
+        $this->assertDatabaseHas('columns', [
+            'id' => $column2->id,
+            'order' => 0,
+        ]);
+        $this->assertDatabaseHas('columns', [
+            'id' => $column3->id,
+            'order' => 1,
+        ]);
+    });
+
+    it('cannot reorder columns for a board from another organization', function () {
+        $otherOrganization = Organization::factory()->create([
+            'owner_id' => $this->user->id,
+        ]);
+        $otherBoard = Board::factory()->create([
+            'organization_id' => $otherOrganization->id,
+        ]);
+        $column = BoardColumn::factory()->create([
+            'board_id' => $otherBoard->id,
+            'name' => 'Column',
+            'order' => 0,
+        ]);
+
+        $response = $this->withApiToken($this->token)
+            ->putJson("/api/columns/reorder", [
+                'boardId' => $otherBoard->id,
+                'columns' => [
+                    ['id' => $column->id, 'order' => 1],
+                ],
+            ]);
+
+        $response
+            ->assertStatus(403)
+            ->assertJson([
+                'message' => 'User does not have access to this board.'
+            ]);
+    });
+
+    it('cannot reorder columns with unauthenticated user', function () {
+        $column = BoardColumn::factory()->create([
+            'board_id' => $this->board->id,
+            'name' => 'Column',
+            'order' => 0,
+        ]);
+
+        $response = $this->putJson("/api/columns/reorder", [
+            'boardId' => $this->board->id,
+            'columns' => [
+                ['id' => $column->id, 'order' => 1],
+            ],
+        ]);
+
+        $response->assertStatus(401);
+    });
+
+    it('validates reorder request data', function () {
+        $response = $this->withApiToken($this->token)
+            ->putJson("/api/columns/reorder", [
+                'boardId' => $this->board->id,
+                'columns' => [
+                    ['id' => 999, 'order' => 1],
+                ],
+            ]);
+
+        $response
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['columns.0.id']);
+    });
+
+    it('validates that columns belong to the specified board', function () {
+        $otherBoard = Board::factory()->create([
+            'organization_id' => $this->organization->id,
+        ]);
+        $otherColumn = BoardColumn::factory()->create([
+            'board_id' => $otherBoard->id,
+            'name' => 'Other Board Column',
+            'order' => 0,
+        ]);
+        $currentColumn = BoardColumn::factory()->create([
+            'board_id' => $this->board->id,
+            'name' => 'Current Board Column',
+            'order' => 0,
+        ]);
+
+        $response = $this->withApiToken($this->token)
+            ->putJson("/api/columns/reorder", [
+                'boardId' => $this->board->id,
+                'columns' => [
+                    ['id' => $otherColumn->id, 'order' => 1],
+                    ['id' => $currentColumn->id, 'order' => 0],
+                ],
+            ]);
+
+        $response
+            ->assertStatus(403)
+            ->assertJson([
+                'message' => "Column with ID {$otherColumn->id} does not belong to board {$this->board->id}."
             ]);
     });
 });

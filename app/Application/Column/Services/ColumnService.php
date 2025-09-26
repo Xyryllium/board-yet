@@ -2,6 +2,7 @@
 
 namespace App\Application\Column\Services;
 
+use App\Domain\Column\Entities\Column;
 use RuntimeException;
 use App\Domain\Column\Repositories\ColumnRepositoryInterface;
 use App\Domain\Column\Services\ColumnDomainService;
@@ -61,10 +62,52 @@ class ColumnService
         return $this->columnRepository->update($columnData);
     }
 
+    public function findColumnById(int $columnId): ?Column
+    {
+        $card = $this->columnRepository->findById($columnId);
+
+        if (!$card) {
+            throw new RuntimeException("Card not found");
+        }
+
+        return $card;
+    }
+
+    public function deleteColumn(int $columnId): void
+    {
+        $column = $this->findColumnById($columnId);
+        $this->columnRepository->delete($column);
+    }
+
+    public function reorder(User $user, int $boardId, array $columns): void
+    {
+        $this->ensureUserCanAccessBoard($user, $boardId);
+
+        $this->validateColumnsBelongToBoard($boardId, $columns);
+
+        $this->columnRepository->reorderBulk($columns);
+    }
+
     private function ensureUserCanAccessBoard(?User $user, int $boardId): void
     {
         if (!$this->columnDomainService->canAccessBoard($boardId, $user->current_organization_id)) {
             throw new RuntimeException('User does not have access to this board.');
+        }
+    }
+
+    private function validateColumnsBelongToBoard(int $boardId, array $columns): void
+    {
+        $columnIds = array_column($columns, 'id');
+        $existingColumns = $this->columnRepository->findByBoard($boardId);
+
+        $existingColumnIds = array_map(function ($column) {
+            return $column->getId();
+        }, $existingColumns);
+
+        foreach ($columnIds as $columnId) {
+            if (!in_array($columnId, $existingColumnIds)) {
+                throw new RuntimeException("Column with ID {$columnId} does not belong to board {$boardId}.");
+            }
         }
     }
 }

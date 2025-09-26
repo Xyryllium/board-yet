@@ -11,24 +11,20 @@ use App\Domain\Auth\ValueObjects\UserRole;
 use App\Domain\User\Entities\User;
 use App\Models\PersonalAccessToken;
 use App\Models\User as EloquentUser;
-use Illuminate\Contracts\Auth\Factory as AuthFactory;
 
 class AuthRepository implements AuthRepositoryInterface
 {
-    public function __construct(
-        private AuthFactory $authFactory,
-    ) {
+    public function __construct()
+    {
     }
 
     public function authenticate(Credentials $credentials): ?User
     {
-        $authGuard = $this->authFactory->guard();
+        $eloquentUser = EloquentUser::where('email', $credentials->email)->first();
 
-        if (!$authGuard->attempt($credentials->toArray())) {
+        if (!$eloquentUser) {
             return null;
         }
-
-        $eloquentUser = $authGuard->user();
 
         return new User(
             name: $eloquentUser->name,
@@ -58,6 +54,34 @@ class AuthRepository implements AuthRepositoryInterface
             role: $role,
             organizationId: $organizationId,
             userId: $user->getId(),
+        );
+    }
+
+    public function createTokenWithExpiration(
+        int $userId,
+        ?string $role = null,
+        ?int $organizationId = null,
+        int $expirationDays = 7
+    ): Token {
+        $eloquentUser = EloquentUser::find($userId);
+
+        if (!$eloquentUser) {
+            throw new RuntimeException('User not found');
+        }
+
+        $expiresAt = now()->addDays($expirationDays);
+        $token = $eloquentUser->createToken('api-token', ['*'], $expiresAt);
+
+        PersonalAccessToken::where('id', $token->accessToken->id)->update([
+            'role' => $role,
+            'organization_id' => $organizationId,
+        ]);
+
+        return new Token(
+            plainTextToken: $token->plainTextToken,
+            role: $role,
+            organizationId: $organizationId,
+            userId: $userId,
         );
     }
 

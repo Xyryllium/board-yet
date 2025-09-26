@@ -38,7 +38,7 @@ class Card
             title: $data['title'],
             description: $data['description'] ?? null,
             order: $data['order'] ?? null,
-            createdAt: $data['updated_at'] ? new DateTime($data['updated_at']) : null,
+            createdAt: $data['created_at'] ? new DateTime($data['created_at']) : null,
             updatedAt: $data['updated_at'] ? new DateTime($data['updated_at']) : null,
         );
     }

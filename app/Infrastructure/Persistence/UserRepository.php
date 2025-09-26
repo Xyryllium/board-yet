@@ -70,4 +70,24 @@ class UserRepository implements UserRepositoryInterface
             })
             ->toArray();
     }
+
+    public function getUsersByOrganizationId(User $user, int $organizationId): array
+    {
+        /** @phpstan-ignore-next-line */
+        return $this->user->where('current_organization_id', $organizationId)
+            ->where('id', '!=', $user->getId())
+            ->with(['organizations' => function ($query) use ($organizationId) {
+                $query->where('organization_id', $organizationId)->withPivot('role');
+            }])
+            ->get()
+            ->map(function ($user) {
+                $userArray = $user->toArray();
+                /** @phpstan-ignore-next-line */
+                $organization = $user->organizations->first();
+                $userArray['role'] = $organization ? $organization->pivot->role : null;
+                unset($userArray['organizations']);
+                return $userArray;
+            })
+            ->toArray();
+    }
 }

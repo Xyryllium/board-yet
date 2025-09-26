@@ -5,6 +5,7 @@ namespace App\Application\Organization\Services;
 use Exception;
 use RuntimeException;
 use App\Domain\Organization\Entities\OrganizationInvitation;
+use App\Domain\Organization\Entities\Organization as EntitiesOrganization;
 use App\Domain\Organization\Enums\InvitationStatus;
 use App\Domain\Organization\Exceptions\OrganizationNotFoundException;
 use App\Domain\Organization\Repositories\OrganizationRepositoryInterface;
@@ -41,11 +42,19 @@ class OrganizationService
     {
         $this->orgDomainService->validateOrganizationName($data['name']);
 
+        if (isset($data['subdomain'])) {
+            $this->orgDomainService->validateSubdomain($data['subdomain']);
+        }
+
         return $this->database->transaction(function () use ($user, $data) {
-            $organization = $this->orgRepository->save([
+            $organizationData = [
                 'name' => $data['name'],
-                'owner_id' => $user->id
-            ]);
+                'owner_id' => $user->id,
+                'subdomain' => $data['subdomain'] ?? null,
+                'settings' => $data['settings'] ?? []
+            ];
+
+            $organization = $this->orgRepository->save($organizationData);
 
             $organization->users()->attach($user->id, ['role' => 'admin']);
 
@@ -123,5 +132,10 @@ class OrganizationService
         }
 
         return $organization;
+    }
+
+    public function findBySubdomain(string $subdomain): ?EntitiesOrganization
+    {
+        return $this->orgRepository->findBySubdomain($subdomain);
     }
 }

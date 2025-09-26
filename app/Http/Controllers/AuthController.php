@@ -4,17 +4,22 @@ namespace App\Http\Controllers;
 
 use Exception;
 use App\Application\Auth\Services\AuthService;
+use App\Application\User\Services\UserService;
 use App\Domain\Auth\Exceptions\InvalidCredentialsException;
 use App\Http\Requests\RegisterRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
-    public function __construct(private AuthService $authService)
-    {
+    public function __construct(
+        private AuthService $authService,
+        private UserService $userService
+    ) {
     }
 
     public function register(RegisterRequest $request): JsonResponse
@@ -52,9 +57,11 @@ class AuthController extends Controller
                 'password' => 'required',
             ]);
 
-            $authenticatedUser = $this->authService->login($credentials);
+            $sessionData = $this->authService->loginWithSession($credentials, 7);
 
-            return response()->json($authenticatedUser->toArray());
+            $response = response()->json($sessionData->getResponseData());
+
+            return $response;
         } catch (InvalidCredentialsException $e) {
             return response()->json([
                 'message' => $e->getMessage()
@@ -65,6 +72,38 @@ class AuthController extends Controller
                 'errors' => $e->errors()
             ], 422);
         } catch (Exception $e) {
+            Log::error('Login error: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'message' => 'An unexpected error occurred',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function currentUser(Request $request): JsonResponse
+    {
+        try {
+            $user = $request->user();
+
+            if (!$user) {
+                return response()->json([
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
+
+            $userData = $this->userService->getCurrentUser($user);
+
+            return response()->json($userData);
+        } catch (Exception $e) {
+            Log::error('Get user data error: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'message' => 'An unexpected error occurred'
             ], 500);
@@ -75,10 +114,23 @@ class AuthController extends Controller
     {
         try {
             $user = $request->user();
-            $this->authService->logoutAllUserTokens($user->id);
 
-            return response()->json(['message' => 'Logged out']);
+            if ($user) {
+                $token = $user->currentAccessToken();
+                if ($token) {
+                    $this->authService->logout($token->plainTextToken ?? '');
+                }
+            }
+
+            $response = response()->json(['message' => 'Logged out successfully']);
+
+            return $response;
         } catch (Exception $e) {
+            Log::error('Logout error: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'message' => 'Logout failed'
             ], 500);

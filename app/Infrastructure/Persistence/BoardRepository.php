@@ -23,17 +23,19 @@ class BoardRepository implements BoardRepositoryInterface
         })->toArray();
     }
 
-    public function findByIdWithCards(int $boardId): ?array
+    public function findByIdWithCards(int $boardId, int $organizationId): ?array
     {
         /** @phpstan-ignore-next-line */
-        $boardWithCards = Board::with([
-            'columns' => function ($query) {
-                $query->orderBy('order');
-            },
-            'columns.cards' => function ($query) {
-                $query->orderBy('order');
-            },
-        ])->find($boardId);
+        $boardWithCards = Board::where('id', $boardId)
+            ->where('organization_id', $organizationId)
+            ->with([
+                'columns' => function ($query) {
+                    $query->orderBy('order');
+                },
+                'columns.cards' => function ($query) {
+                    $query->orderBy('order');
+                },
+            ])->first();
 
         return $boardWithCards ? $this->toDomain($boardWithCards)->toArray() : null;
     }

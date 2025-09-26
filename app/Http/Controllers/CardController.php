@@ -50,6 +50,7 @@ class CardController extends Controller
                 'title' => 'sometimes|required|string|min:1|max:255',
                 'description' => 'sometimes|nullable|string',
                 'order' => 'sometimes|required|integer',
+                'column_id' => 'sometimes|required|integer|exists:columns,id',
             ]);
 
             $card = $this->cardService->updateCard($cardId, $data);

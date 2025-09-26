@@ -9,5 +9,5 @@ interface BoardRepositoryInterface
     public function all(int $organizationId): array;
     public function findByNameAndOrganizationId(string $name, int $organizationId): ?array;
     public function findByIdAndOrganizationId(int $boardId, int $organizationId): ?array;
-    public function findByIdWithCards(int $boardId): ?array;
+    public function findByIdWithCards(int $boardId, int $organizationId): ?array;
 }

@@ -4,6 +4,8 @@ namespace App\Application\Auth\Services;
 
 use Exception;
 use RuntimeException;
+use App\Application\Auth\Services\SessionService;
+use App\Domain\Auth\ValueObjects\SessionData;
 use App\Domain\Auth\Entities\AuthenticatedUser;
 use App\Domain\Auth\Exceptions\InvalidCredentialsException;
 use App\Domain\Auth\Services\AuthDomainService;
@@ -17,6 +19,7 @@ class AuthService
 {
     public function __construct(
         private AuthDomainService $authDomainService,
+        private SessionService $sessionService,
     ) {
     }
 
@@ -34,6 +37,13 @@ class AuthService
         } catch (Exception $e) {
             throw new RuntimeException('Login failed: ' . $e->getMessage());
         }
+    }
+
+    public function loginWithSession(array $credentials, int $expirationDays = 7): SessionData
+    {
+        $authenticatedUser = $this->login($credentials);
+
+        return $this->sessionService->createSession($authenticatedUser, $expirationDays);
     }
 
     public function register(array $userData): AuthenticatedUser
@@ -54,7 +64,7 @@ class AuthService
     public function logout(string $token): bool
     {
         try {
-            return $this->authDomainService->logout($token);
+            return $this->sessionService->revokeSession($token);
         } catch (Exception $e) {
             throw new RuntimeException('Logout failed: ' . $e->getMessage());
         }
@@ -63,7 +73,7 @@ class AuthService
     public function logoutAllUserTokens(int $userId): bool
     {
         try {
-            return $this->authDomainService->logoutAllUserTokens($userId);
+            return $this->sessionService->revokeAllUserSessions($userId);
         } catch (Exception $e) {
             throw new RuntimeException('Logout all tokens failed: ' . $e->getMessage());
         }
@@ -72,7 +82,7 @@ class AuthService
     public function getCurrentUser(string $token): ?AuthenticatedUser
     {
         try {
-            return $this->authDomainService->getAuthenticatedUser($token);
+            return $this->sessionService->getSessionFromToken($token);
         } catch (Exception $e) {
             throw new RuntimeException('Failed to get current user: ' . $e->getMessage());
         }
@@ -90,6 +100,12 @@ class AuthService
             return null;
         }
 
+        $subdomain = null;
+        if ($token->organization_id) {
+            $organization = $user->currentOrganization;
+            $subdomain = $organization?->subdomain;
+        }
+
         return new AuthenticatedUser(
             userId: $user->id,
             name: $user->name,
@@ -104,6 +120,7 @@ class AuthService
                 role: $token->role,
                 organizationId: $token->organization_id ?? 0,
             ) : null,
+            subdomain: $subdomain,
         );
     }
 }
