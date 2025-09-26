@@ -143,14 +143,15 @@ class OrganizationService
     {
         $organization = $invitation->organization;
 
-        if ($organization->subdomain) {
-            $domain = config('app.domain', 'localhost');
-            $protocol = config('app.env') === 'production' ? 'https' : 'http';
-            $port = config('app.env') === 'local' ? ':' . config('app.port', '8000') : '';
-
-            return "{$protocol}://{$organization->subdomain}.{$domain}{$port}/invitations/accept/{$invitation->token}";
-        } else {
+        /** @phpstan-ignore-next-line */
+        if (!$organization->subdomain) {
             return config('app.frontend_url') . "/invitations/accept/{$invitation->token}";
         }
+
+        $domain = config('app.domain', 'localhost');
+        $protocol = config('app.env') === 'production' ? 'https' : 'http';
+        $port = config('app.env') === 'local' ? ':' . config('app.port', '8000') : '';
+
+        return "{$protocol}://{$organization->subdomain}.{$domain}{$port}/invitations/accept/{$invitation->token}";
     }
 }

@@ -29,7 +29,7 @@ describe('Invitation URL Generation', function () {
         $invitation = OrganizationInvitation::factory()->create([
             'organization_id' => $organization->id,
             'email' => 'invited@example.com',
-            'token' => 'test-token-123',
+            'token' => '550e8400-e29b-41d4-a716-446655440000',
         ]);
 
         $invitation->load('organization');
@@ -37,7 +37,7 @@ describe('Invitation URL Generation', function () {
         $url = $this->organizationService->generateInvitationUrl($invitation);
 
         expect($url)->toContain('test-org');
-        expect($url)->toContain('test-token-123');
+        expect($url)->toContain('550e8400-e29b-41d4-a716-446655440000');
         expect($url)->toContain('/invitations/accept/');
         
         expect($url)->toStartWith('http://');
@@ -53,14 +53,14 @@ describe('Invitation URL Generation', function () {
         $invitation = OrganizationInvitation::factory()->create([
             'organization_id' => $organization->id,
             'email' => 'invited@example.com',
-            'token' => 'test-token-123',
+            'token' => '550e8400-e29b-41d4-a716-446655440000',
         ]);
 
         $invitation->load('organization');
 
         $url = $this->organizationService->generateInvitationUrl($invitation);
 
-        $expectedUrl = config('app.frontend_url') . '/invitations/accept/test-token-123';
+        $expectedUrl = config('app.frontend_url') . '/invitations/accept/550e8400-e29b-41d4-a716-446655440000';
 
         expect($url)->toBe($expectedUrl);
     });
@@ -75,7 +75,7 @@ describe('Invitation URL Generation', function () {
         $invitation = OrganizationInvitation::factory()->create([
             'organization_id' => $organization->id,
             'email' => 'invited@example.com',
-            'token' => 'test-token-123',
+            'token' => '550e8400-e29b-41d4-a716-446655440000',
         ]);
 
         $invitation->load('organization');
@@ -99,7 +99,7 @@ describe('Invitation URL Generation', function () {
         $invitation = OrganizationInvitation::factory()->create([
             'organization_id' => $organization->id,
             'email' => 'invited@example.com',
-            'token' => 'test-token-123',
+            'token' => '550e8400-e29b-41d4-a716-446655440000',
         ]);
 
         $invitation->load('organization');
@@ -121,7 +121,7 @@ describe('Invitation URL Generation', function () {
         $invitation = OrganizationInvitation::factory()->create([
             'organization_id' => $organization->id,
             'email' => 'invited@example.com',
-            'token' => 'test-token-123',
+            'token' => '550e8400-e29b-41d4-a716-446655440000',
         ]);
 
         $invitation->load('organization');
