@@ -18,7 +18,9 @@ return new class extends Migration
             $table->json('settings')->default('{}')->after('subdomain');
         });
 
-        DB::statement("ALTER TABLE organizations ADD CONSTRAINT check_subdomain_format CHECK (subdomain ~ '^[a-z0-9]([a-z0-9-]{1,61}[a-z0-9])?$')");
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement("ALTER TABLE organizations ADD CONSTRAINT check_subdomain_format CHECK (subdomain ~ '^[a-z0-9]([a-z0-9-]{1,61}[a-z0-9])?$')");
+        }
     }
 
     /**
@@ -26,7 +28,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement("ALTER TABLE organizations DROP CONSTRAINT IF EXISTS check_subdomain_format");
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement("ALTER TABLE organizations DROP CONSTRAINT IF EXISTS check_subdomain_format");
+        }
         
         Schema::table('organizations', function (Blueprint $table) {
             $table->dropColumn('subdomain');

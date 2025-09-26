@@ -41,7 +41,7 @@ class OrganizationService
     public function create(User $user, array $data): Organization
     {
         $this->orgDomainService->validateOrganizationName($data['name']);
-        
+
         if (isset($data['subdomain'])) {
             $this->orgDomainService->validateSubdomain($data['subdomain']);
         }
