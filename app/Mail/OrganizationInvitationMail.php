@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Application\Organization\Services\OrganizationService;
 use App\Models\OrganizationInvitation;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -18,7 +19,8 @@ class OrganizationInvitationMail extends Mailable
      * Create a new message instance.
      */
     public function __construct(
-        private OrganizationInvitation $invitation
+        private OrganizationInvitation $invitation,
+        private OrganizationService $organizationService
     ) {
         $this->invitation = $invitation->load('organization');
     }
@@ -42,6 +44,7 @@ class OrganizationInvitationMail extends Mailable
             markdown: 'emails.organization.invitation',
             with: [
                 'invitation' => $this->invitation,
+                'invitationUrl' => $this->organizationService->generateInvitationUrl($this->invitation),
             ]
         );
     }

@@ -3,6 +3,7 @@
 namespace App\Listeners;
 
 use Exception;
+use App\Application\Organization\Services\OrganizationService;
 use App\Events\OrganizationInvitationSent;
 use App\Mail\OrganizationInvitationMail;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -14,8 +15,9 @@ class SendOrganizationInvitation implements ShouldQueue
 {
     use InteractsWithQueue;
 
-    public function __construct()
-    {
+    public function __construct(
+        private OrganizationService $organizationService
+    ) {
     }
 
     public function handle(OrganizationInvitationSent $event): void
@@ -39,7 +41,7 @@ class SendOrganizationInvitation implements ShouldQueue
         }
 
         try {
-            Mail::to($invitation->email)->send(new OrganizationInvitationMail($invitation));
+            Mail::to($invitation->email)->send(new OrganizationInvitationMail($invitation, $this->organizationService));
 
             cache()->put($cacheKey, true, now()->addHours(24));
 

@@ -138,4 +138,19 @@ class OrganizationService
     {
         return $this->orgRepository->findBySubdomain($subdomain);
     }
+
+    public function generateInvitationUrl(ModelsOrganizationInvitation $invitation): string
+    {
+        $organization = $invitation->organization;
+
+        if ($organization->subdomain) {
+            $domain = config('app.domain', 'localhost');
+            $protocol = config('app.env') === 'production' ? 'https' : 'http';
+            $port = config('app.env') === 'local' ? ':' . config('app.port', '8000') : '';
+
+            return "{$protocol}://{$organization->subdomain}.{$domain}{$port}/invitations/accept/{$invitation->token}";
+        } else {
+            return config('app.frontend_url') . "/invitations/accept/{$invitation->token}";
+        }
+    }
 }
