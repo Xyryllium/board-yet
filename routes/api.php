@@ -25,11 +25,11 @@ Route::get('/organizations/subdomain/{subdomain}', [OrganizationController::clas
 Route::middleware([AuthenticateApiToken::class])->group(function () {
     Route::get('/auth/me', [AuthController::class, 'currentUser']);
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/organizations', [OrganizationController::class, 'store']);
 });
 
 Route::middleware([AuthenticateApiToken::class, 'org.scope'])->group(function () {
     Route::prefix('organizations')->group(function () {
-        Route::post('/', [OrganizationController::class, 'store']);
         Route::post('/{id}/invite', [OrganizationMemberController::class, 'invite']);
     });
     Route::prefix('boards')->group(function () {

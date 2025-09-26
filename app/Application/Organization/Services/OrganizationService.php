@@ -41,12 +41,20 @@ class OrganizationService
     public function create(User $user, array $data): Organization
     {
         $this->orgDomainService->validateOrganizationName($data['name']);
+        
+        if (isset($data['subdomain'])) {
+            $this->orgDomainService->validateSubdomain($data['subdomain']);
+        }
 
         return $this->database->transaction(function () use ($user, $data) {
-            $organization = $this->orgRepository->save([
+            $organizationData = [
                 'name' => $data['name'],
-                'owner_id' => $user->id
-            ]);
+                'owner_id' => $user->id,
+                'subdomain' => $data['subdomain'] ?? null,
+                'settings' => $data['settings'] ?? []
+            ];
+
+            $organization = $this->orgRepository->save($organizationData);
 
             $organization->users()->attach($user->id, ['role' => 'admin']);
 
