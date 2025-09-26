@@ -24,9 +24,13 @@ describe('Column Management', function () {
             'current_organization_id' => $this->organization->id,
         ]);
 
+        $this->organization->users()->attach($this->user->id, ['role' => 'admin']);
+
         $this->board = Board::factory()->create([
             'organization_id' => $this->organization->id,
         ]);
+
+        $this->token = $this->user->createToken('test-token')->plainTextToken;
     });
 
     it('can list columns based on board', function () {
@@ -34,7 +38,7 @@ describe('Column Management', function () {
             'board_id' => $this->board->id,
         ]);
         
-        $response = $this->actingAs($this->user)
+        $response = $this->withApiToken($this->token)
                     ->getJson("/api/boards/{$this->board->id}/columns");
 
         $response
@@ -50,7 +54,7 @@ describe('Column Management', function () {
             'organization_id' => $otherOrganization->id,
         ]);
 
-        $response = $this->actingAs($this->user)
+        $response = $this->withApiToken($this->token)
                     ->getJson("/api/boards/{$otherBoard->id}/columns");
 
         $response
@@ -61,7 +65,7 @@ describe('Column Management', function () {
     });
 
     it('can create a column with authenticated user', function () {
-        $response = $this->actingAs($this->user)
+        $response = $this->withApiToken($this->token)
             ->postJson("/api/columns", [
                 'boardId' => $this->board->id,
                 'columns' => [
@@ -97,7 +101,7 @@ describe('Column Management', function () {
             'organization_id' => $otherOrganization->id,
         ]);
 
-        $response = $this->actingAs($this->user)
+        $response = $this->withApiToken($this->token)
             ->postJson("/api/columns", [
                 'boardId' => $otherBoard->id,
                 'columns' => [
@@ -139,7 +143,7 @@ describe('Column Management', function () {
             'order' => 1,
         ]);
 
-        $response = $this->actingAs($this->user)
+        $response = $this->withApiToken($this->token)
             ->putJson("/api/columns/$column->id", [
                 'boardId' => $this->board->id,
                 'name' => 'Updated Column',
@@ -173,7 +177,7 @@ describe('Column Management', function () {
             'order' => 1,
         ]);
 
-        $response = $this->actingAs($this->user)
+        $response = $this->withApiToken($this->token)
             ->putJson("/api/columns/$column->id", [
             'boardId' => $otherBoard->id,
             'name' => 'Updated Column',

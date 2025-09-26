@@ -15,16 +15,21 @@ describe('Board Management', function () {
 
         $this->organization = Organization::factory()->create([
             'name' => 'Test Organization',
+            'subdomain' => 'test-organization',
             'owner_id' => $this->user->id,
         ]);
 
         $this->user->update([
             'current_organization_id' => $this->organization->id,
         ]);
+
+        $this->organization->users()->attach($this->user->id, ['role' => 'admin']);
+
+        $this->token = $this->user->createToken('test-token')->plainTextToken;
     });
 
     it('can create a board with authenticated user', function () {
-        $response = $this->actingAs($this->user)->postJson('/api/boards', [
+        $response = $this->withApiToken($this->token)->postJson('/api/boards', [
             'name' => 'New Board',
         ]);
 
@@ -44,12 +49,14 @@ describe('Board Management', function () {
             'email' => 'john.doe.without.org@example.com',
         ]);
 
-        $response = $this->actingAs($userWithoutOrg)->postJson('/api/boards', [
+        $tokenWithoutOrg = $userWithoutOrg->createToken('test-token')->plainTextToken;
+
+        $response = $this->withApiToken($tokenWithoutOrg)->postJson('/api/boards', [
             'name' => 'New Board',
         ]);
 
         $response
-            ->assertStatus(400)
+            ->assertStatus(403)
             ->assertJson([
                 'message' => 'User does not belong to any organization.'
             ]);
@@ -60,7 +67,7 @@ describe('Board Management', function () {
             'organization_id' => $this->organization->id,
         ]);
 
-        $this->actingAs($this->user)
+        $this->withApiToken($this->token)
             ->getJson('/api/boards')
             ->assertStatus(200)
             ->assertJsonStructure([
@@ -72,7 +79,7 @@ describe('Board Management', function () {
     });
 
     it('returns empty array when organization has no boards', function () {
-        $this->actingAs($this->user)
+        $this->withApiToken($this->token)
             ->getJson('/api/boards')
             ->assertStatus(200)
             ->assertJson([
@@ -86,7 +93,7 @@ describe('Board Management', function () {
             'organization_id' => $this->organization->id,
         ]);
 
-        $response = $this->actingAs($this->user)
+        $response = $this->withToken($this->token)
             ->putJson("/api/boards/{$board->id}", [
                 'name' => 'Updated Board Name',
             ]);
@@ -118,7 +125,7 @@ describe('Board Management', function () {
             'organization_id' => $this->organization->id,
         ]);
 
-        $response = $this->actingAs($this->user)
+        $response = $this->withToken($this->token)
             ->putJson("/api/boards/{$boardToUpdate->id}", [
                 'name' => 'Existing Board',
             ]);
@@ -146,7 +153,7 @@ describe('Board Management', function () {
             ['title' => 'Task 2', 'description' => 'Description 2', 'order' => 2],
         ]);
 
-        $response = $this->actingAs($this->user)
+        $response = $this->withToken($this->token)
             ->getJson("/api/boards/{$board->id}");
 
         $response

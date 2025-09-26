@@ -24,6 +24,8 @@ describe('Card Management', function () {
             'current_organization_id' => $this->organization->id,
         ]);
 
+        $this->organization->users()->attach($this->user->id, ['role' => 'admin']);
+
         $this->board = Board::factory()->create([
             'organization_id' => $this->organization->id,
         ]);
@@ -31,10 +33,12 @@ describe('Card Management', function () {
         $this->column = BoardColumn::factory()->create([
             'board_id' => $this->board->id,
         ]);
+
+        $this->token = $this->user->createToken('test-token')->plainTextToken;
     });
 
     it('can create a card in a column', function () {
-        $response = $this->actingAs($this->user)
+        $response = $this->withApiToken($this->token)
             ->postJson("/api/columns/{$this->column->id}/cards", [
             'title' => 'New Card',
             'description' => 'Card description',
@@ -66,7 +70,7 @@ describe('Card Management', function () {
             'order' => 1,
         ]);
 
-        $response = $this->actingAs($this->user)
+        $response = $this->withApiToken($this->token)
             ->putJson("/api/cards/{$card->id}", [
                 'title' => 'Updated Title',
                 'description' => 'Updated Description',
@@ -98,7 +102,7 @@ describe('Card Management', function () {
             'order' => 1,
         ]);
 
-        $response = $this->actingAs($this->user)
+        $response = $this->withApiToken($this->token)
             ->deleteJson("/api/cards/{$card->id}");
 
         $response
