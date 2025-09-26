@@ -31,7 +31,8 @@ class OrganizationDomainService
 
         if (!preg_match('/^[a-z0-9]([a-z0-9-]{1,61}[a-z0-9])?$/', $subdomain)) {
             throw ValidationException::withMessages([
-                'subdomain' => 'Subdomain must contain only lowercase letters, numbers, and hyphens. It must start and end with alphanumeric characters.'
+                'subdomain' => 'Subdomain must contain only lowercase letters, numbers, and hyphens.
+                                It must start and end with alphanumeric characters.'
             ]);
         }
 

@@ -16,7 +16,9 @@ class OrganizationController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string|min:3|max:255',
-            'subdomain' => 'nullable|string|min:3|max:63|regex:/^[a-z0-9]([a-z0-9-]{1,61}[a-z0-9])?$/|unique:organizations,subdomain',
+            'subdomain' => 'nullable|string|min:3|max:63
+                            |regex:/^[a-z0-9]([a-z0-9-]{1,61}[a-z0-9])?$/
+                            |unique:organizations,subdomain',
             'settings' => 'nullable|array'
         ]);
 
