@@ -10,7 +10,13 @@ class ColumnRepository implements ColumnRepositoryInterface
 {
     public function findByBoard(int $boardId): array
     {
-        $columns = BoardColumn::where('board_id', $boardId)->orderBy('order')->get();
+        /** @phpstan-ignore-next-line */
+        $columns = BoardColumn::where('board_id', $boardId)
+            ->whereHas('board', function ($query) {
+                $query->where('organization_id', request()->attributes->get('organization_id'));
+            })
+            ->orderBy('order')
+            ->get();
 
         return $columns->map(function ($board) {
             return $this->toDomain($board);
@@ -19,7 +25,12 @@ class ColumnRepository implements ColumnRepositoryInterface
 
     public function fetchMaxOrderInBoard(int $boardId): int
     {
-        return (BoardColumn::where('board_id', $boardId)->max('order') ?? 0) + 1;
+        /** @phpstan-ignore-next-line */
+        return (BoardColumn::where('board_id', $boardId)
+            ->whereHas('board', function ($query) {
+                $query->where('organization_id', request()->attributes->get('organization_id'));
+            })
+            ->max('order') ?? 0) + 1;
     }
 
     public function create(array $columnData): array
@@ -41,10 +52,34 @@ class ColumnRepository implements ColumnRepositoryInterface
         return $createdColumns;
     }
 
+    public function findById(int $columnId): ?Column
+    {
+        /** @phpstan-ignore-next-line */
+        $column = BoardColumn::where('id', $columnId)
+            ->whereHas('board', function ($query) {
+                $query->where('organization_id', request()->attributes->get('organization_id'));
+            })
+            ->first();
+        return $column ? $this->toDomain($column) : null;
+    }
+
+    public function delete(Column $column): void
+    {
+        $columnModel = BoardColumn::find($column->columnId);
+
+        if ($columnModel) {
+            $columnModel->delete();
+        }
+    }
+
     public function update(array $columnData): array
     {
+        /** @phpstan-ignore-next-line */
         $column = BoardColumn::where('id', $columnData['id'])
                 ->where('board_id', $columnData['board_id'])
+                ->whereHas('board', function ($query) {
+                    $query->where('organization_id', request()->attributes->get('organization_id'));
+                })
                 ->firstOrFail();
 
         $column->update([
@@ -53,6 +88,18 @@ class ColumnRepository implements ColumnRepositoryInterface
         ]);
 
         return $this->toDomain($column->fresh())->toArray();
+    }
+
+    public function reorderBulk(array $columns): void
+    {
+        foreach ($columns as $columnData) {
+            /** @phpstan-ignore-next-line */
+            BoardColumn::where('id', $columnData['id'])
+                ->whereHas('board', function ($query) {
+                    $query->where('organization_id', request()->attributes->get('organization_id'));
+                })
+                ->update(['order' => $columnData['order']]);
+        }
     }
 
     private function toDomain(BoardColumn $column): Column

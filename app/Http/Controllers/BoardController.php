@@ -15,7 +15,10 @@ class BoardController extends Controller
 
     public function index(): JsonResponse
     {
-        $boards = $this->boardService->list(auth()->user());
+        /** @var \App\Models\User $user */
+        $user = auth('sanctum')->user();
+
+        $boards = $this->boardService->list($user);
 
         return response()->json([
             'success' => true,
@@ -24,9 +27,10 @@ class BoardController extends Controller
         ], 200);
     }
 
-    public function show(int $boardId): JsonResponse
+    public function show(Request $request, int $boardId): JsonResponse
     {
-        $board = $this->boardService->getBoardWithCards($boardId);
+        $organizationId = $request->attributes->get('organization_id');
+        $board = $this->boardService->getBoardWithCards($boardId, $organizationId);
         return response()->json([
             'success' => true,
             'data' => $board,
@@ -41,7 +45,10 @@ class BoardController extends Controller
                 'name' => 'required|string|min:3|max:255'
             ]);
 
-            $board = $this->boardService->create(auth()->user(), $data);
+            /** @var \App\Models\User $user */
+            $user = auth('sanctum')->user();
+
+            $board = $this->boardService->create($user, $data);
             return response()->json([
                 'success' => true,
                 'data' => $board,
@@ -62,8 +69,11 @@ class BoardController extends Controller
                 'name' => 'required|string|min:3|max:255'
             ]);
 
+            /** @var \App\Models\User $user */
+            $user = auth('sanctum')->user();
+
             $board = $this->boardService->update(
-                auth()->user(),
+                $user,
                 $data,
                 $boardId
             );

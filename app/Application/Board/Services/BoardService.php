@@ -18,9 +18,9 @@ class BoardService
         return $this->boardRepository->all($user->current_organization_id);
     }
 
-    public function getBoardWithCards(int $boardId): array
+    public function getBoardWithCards(int $boardId, int $organizationId): array
     {
-        $board = $this->boardRepository->findByIdWithCards($boardId);
+        $board = $this->boardRepository->findByIdWithCards($boardId, $organizationId);
 
         if (!$board) {
             throw BoardNotFoundException::withId($boardId);

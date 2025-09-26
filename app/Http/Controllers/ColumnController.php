@@ -16,7 +16,9 @@ class ColumnController extends Controller
     public function index(int $boardId): JsonResponse
     {
         try {
-            $columns = $this->columnService->list(auth()->user(), $boardId);
+            /** @var \App\Models\User $user */
+            $user = auth('sanctum')->user();
+            $columns = $this->columnService->list($user, $boardId);
 
             return response()->json([
                 'data' => $columns
@@ -54,8 +56,10 @@ class ColumnController extends Controller
 
             $data['id'] = $columnId;
 
+            /** @var \App\Models\User $user */
+            $user = auth('sanctum')->user();
             $updatedColumn = $this->columnService->update(
-                auth()->user(),
+                $user,
                 $data,
             );
 
@@ -65,6 +69,44 @@ class ColumnController extends Controller
             ], 200);
         } catch (\RuntimeException $e) {
             return response()->json(['message' => $e->getMessage()], 403);
+        }
+    }
+
+    public function destroy(int $cardId): JsonResponse
+    {
+        try {
+            $this->columnService->deleteColumn($cardId);
+            return response()->json(['message' => 'Column deleted successfully!'], 200);
+        } catch (\RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
+        }
+    }
+
+    public function reorder(Request $request): JsonResponse
+    {
+        try {
+            $data = $request->validate([
+                'boardId' => 'required|integer|exists:boards,id',
+                'columns' => 'required|array|min:1',
+                'columns.*.id' => 'required|integer|exists:columns,id',
+                'columns.*.order' => 'required|integer|min:0',
+            ]);
+
+            /** @var \App\Models\User $user */
+            $user = auth('sanctum')->user();
+            $this->columnService->reorder($user, $data['boardId'], $data['columns']);
+
+            return response()->json([
+                'message' => 'Columns reordered successfully!',
+                'data' => $data['columns']
+            ], 200);
+        } catch (\RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 403);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
         }
     }
 
@@ -83,7 +125,9 @@ class ColumnController extends Controller
         ]);
 
         $columnsData = $this->prepareBulkColumnsData($data['columns'], $data['boardId']);
-        $columns = $this->columnService->createBulk(auth()->user(), $columnsData);
+        /** @var \App\Models\User $user */
+        $user = auth('sanctum')->user();
+        $columns = $this->columnService->createBulk($user, $columnsData);
 
         return response()->json([
             'message' => 'Columns created successfully!',
@@ -98,7 +142,9 @@ class ColumnController extends Controller
             'name' => 'required|string|min:3|max:255',
         ]);
 
-        $column = $this->columnService->create(auth()->user(), $data);
+        /** @var \App\Models\User $user */
+        $user = auth('sanctum')->user();
+        $column = $this->columnService->create($user, $data);
 
         return response()->json([
             'message' => 'Column created successfully!',
