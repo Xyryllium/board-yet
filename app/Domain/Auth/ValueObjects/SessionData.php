@@ -13,19 +13,6 @@ class SessionData
     ) {
     }
 
-    public function getCookieData(): array
-    {
-        return [
-            'name' => 'api_token',
-            'value' => $this->token->plainTextToken,
-            'minutes' => 60 * 24 * $this->expirationDays,
-            'path' => '/',
-            'domain' => config('app.cookie_domain', 'api-test-board.com'),
-            'secure' => config('app.secure_cookies', false),
-            'httpOnly' => true,
-            'sameSite' => 'lax'
-        ];
-    }
 
     public function getResponseData(): array
     {

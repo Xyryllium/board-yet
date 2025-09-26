@@ -9,10 +9,10 @@ use App\Http\Controllers\OrganizationMemberController;
 use App\Http\Controllers\UserController;
 use App\Http\Middleware\AuthenticateApiToken;
 use Illuminate\Support\Facades\Route;
-use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+
 Route::post('/organizations/invitations/accept',
     [OrganizationMemberController::class, 'acceptInvitation']
 );
@@ -27,7 +27,7 @@ Route::middleware([AuthenticateApiToken::class])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 });
 
-Route::middleware([AuthenticateApiToken::class])->group(function () {
+Route::middleware([AuthenticateApiToken::class, 'org.scope'])->group(function () {
     Route::prefix('organizations')->group(function () {
         Route::post('/', [OrganizationController::class, 'store']);
         Route::post('/{id}/invite', [OrganizationMemberController::class, 'invite']);

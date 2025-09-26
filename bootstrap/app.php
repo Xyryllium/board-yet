@@ -14,7 +14,10 @@ return Application::configure(basePath: dirname(__DIR__))
             ->withMiddleware(function (Middleware $middleware): void {
                 $middleware->api(append: [
                     \Illuminate\Http\Middleware\HandleCors::class,
-                    \App\Http\Middleware\HandleApiTokenCookie::class,
+                ]);
+                
+                $middleware->alias([
+                    'org.scope' => \App\Http\Middleware\OrganizationScopeMiddleware::class,
                 ]);
             })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -61,21 +61,6 @@ class AuthController extends Controller
 
             $response = response()->json($sessionData->getResponseData());
 
-            $cookieData = $sessionData->getCookieData();
-
-            $response->withCookie(cookie(
-                name: $cookieData['name'],
-                value: $cookieData['value'],
-                minutes: $cookieData['minutes'],
-                path: $cookieData['path'],
-                domain: $cookieData['domain'],
-                secure: $cookieData['secure'],
-                httpOnly: $cookieData['httpOnly'],
-                sameSite: $cookieData['sameSite']
-            ));
-
-            $response->header('Authorization', 'Bearer ' . $sessionData->token->plainTextToken);
-
             return $response;
         } catch (InvalidCredentialsException $e) {
             return response()->json([
@@ -133,24 +118,11 @@ class AuthController extends Controller
             if ($user) {
                 $token = $user->currentAccessToken();
                 if ($token) {
-                    // Use the DDD approach for logout
                     $this->authService->logout($token->plainTextToken ?? '');
                 }
             }
 
             $response = response()->json(['message' => 'Logged out successfully']);
-
-            // Clear the API token cookie
-            $response->withCookie(cookie(
-                name: 'api_token',
-                value: '',
-                minutes: -1,
-                path: '/',
-                domain: config('app.cookie_domain', 'api-test-board.com'),
-                secure: config('app.secure_cookies', false),
-                httpOnly: true,
-                sameSite: 'lax'
-            ));
 
             return $response;
         } catch (Exception $e) {
