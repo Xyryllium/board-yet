@@ -27,8 +27,6 @@ phpunit.xml
 .php_cs.cache
 .php-cs-fixer.cache
 .phpstan.neon
-phpcs.xml
-phpmd.xml
 
 # IDE files
 .vscode/
