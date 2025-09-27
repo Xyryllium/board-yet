@@ -275,27 +275,27 @@ sleep 10
 
 print_status "Running database migrations..."
 cd current
-docker run --rm --network board-yet_app-network -v $(pwd):/var/www --workdir /var/www board-yet:latest php artisan migrate --force
+docker run --rm --network current_app-network -v $(pwd):/var/www --workdir /var/www board-yet:latest php artisan migrate --force
 cd ..
 
 print_status "Clearing application caches..."
 cd current
-docker run --rm --network board-yet_app-network -v $(pwd):/var/www --workdir /var/www board-yet:latest php artisan cache:clear
-docker run --rm --network board-yet_app-network -v $(pwd):/var/www --workdir /var/www board-yet:latest php artisan config:clear
-docker run --rm --network board-yet_app-network -v $(pwd):/var/www --workdir /var/www board-yet:latest php artisan route:clear
+docker run --rm --network current_app-network -v $(pwd):/var/www --workdir /var/www board-yet:latest php artisan cache:clear
+docker run --rm --network current_app-network -v $(pwd):/var/www --workdir /var/www board-yet:latest php artisan config:clear
+docker run --rm --network current_app-network -v $(pwd):/var/www --workdir /var/www board-yet:latest php artisan route:clear
 cd ..
 
 print_status "Optimizing application for production..."
 cd current
-docker run --rm --network board-yet_app-network -v $(pwd):/var/www --workdir /var/www board-yet:latest php artisan config:cache
-docker run --rm --network board-yet_app-network -v $(pwd):/var/www --workdir /var/www board-yet:latest php artisan route:cache
-docker run --rm --network board-yet_app-network -v $(pwd):/var/www --workdir /var/www board-yet:latest php artisan view:cache
+docker run --rm --network current_app-network -v $(pwd):/var/www --workdir /var/www board-yet:latest php artisan config:cache
+docker run --rm --network current_app-network -v $(pwd):/var/www --workdir /var/www board-yet:latest php artisan route:cache
+docker run --rm --network current_app-network -v $(pwd):/var/www --workdir /var/www board-yet:latest php artisan view:cache
 cd ..
 
 print_status "Setting proper permissions..."
 cd current
-docker run --rm --network board-yet_app-network -v $(pwd):/var/www --workdir /var/www board-yet:latest chown -R www-data:www-data /var/www/storage
-docker run --rm --network board-yet_app-network -v $(pwd):/var/www --workdir /var/www board-yet:latest chown -R www-data:www-data /var/www/bootstrap/cache
+docker run --rm --network current_app-network -v $(pwd):/var/www --workdir /var/www board-yet:latest chown -R www-data:www-data /var/www/storage
+docker run --rm --network current_app-network -v $(pwd):/var/www --workdir /var/www board-yet:latest chown -R www-data:www-data /var/www/bootstrap/cache
 cd ..
 
 print_status "Performing health check..."
