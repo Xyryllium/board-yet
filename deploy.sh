@@ -34,7 +34,11 @@ if ! docker info > /dev/null 2>&1; then
 fi
 
 if [ ! -f ".env" ]; then
-    print_error ".env file not found. Please create one based on production.env.example"
+    print_warning ".env file not found. Creating one from production.env.example..."
+    cp production.env.example .env
+    print_status "Created .env file from production.env.example"
+    print_warning "Please update .env with your production values before running again"
+    print_warning "Key values to update: APP_KEY, DB_PASSWORD, MAIL_USERNAME, MAIL_PASSWORD"
     exit 1
 fi
 
