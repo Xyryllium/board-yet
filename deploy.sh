@@ -33,6 +33,14 @@ if ! docker info > /dev/null 2>&1; then
     exit 1
 fi
 
+# Check available disk space (minimum 2GB required)
+AVAILABLE_SPACE=$(df / | awk 'NR==2 {print $4}')
+if [ "$AVAILABLE_SPACE" -lt 2097152 ]; then
+    print_error "Insufficient disk space. At least 2GB required, but only $(($AVAILABLE_SPACE / 1024))MB available."
+    exit 1
+fi
+print_status "Disk space check passed: $(($AVAILABLE_SPACE / 1024 / 1024))GB available"
+
 if [ ! -f ".env" ]; then
     print_warning ".env file not found. Creating one from production.env.example..."
     cp production.env.example .env
@@ -86,16 +94,39 @@ cp .gitignore current/
 print_status "Installing dependencies..."
 
 cd current
-docker run --rm -v $(pwd):/var/www board-yet:latest composer install --no-dev --optimize-autoloader
+print_status "Cleaning up existing dependencies..."
+sudo rm -rf vendor composer.lock
+
+print_status "Installing Composer dependencies..."
+for attempt in {1..3}; do
+    print_status "Composer install attempt $attempt/3..."
+    if docker run --rm \
+        -v $(pwd):/var/www \
+        -v ~/.composer/cache:/tmp/composer-cache \
+        --workdir /var/www \
+        board-yet:latest \
+        composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-suggest; then
+        print_status "Dependencies installed successfully!"
+        break
+    else
+        print_warning "Composer install attempt $attempt failed"
+        if [ $attempt -eq 3 ]; then
+            print_error "All Composer install attempts failed. Check disk space and network connectivity."
+            print_error "Current disk usage:"
+            df -h
+            exit 1
+        fi
+        print_status "Retrying in 5 seconds..."
+        sleep 5
+    fi
+done
 cd ..
 
-# Verify .env file was copied and has content
 if [ ! -f "current/.env" ]; then
     print_error "Failed to copy .env file to current directory"
     exit 1
 fi
 
-# Check if .env has database variables
 if ! grep -q "DB_DATABASE=" current/.env; then
     print_error ".env file is missing DB_DATABASE variable"
     exit 1
@@ -123,7 +154,6 @@ fi
 
 print_status "Starting services..."
 cd current
-# Ensure .env file is available for docker-compose
 if [ ! -f ".env" ]; then
     print_error ".env file not found in current directory. This is required for docker-compose."
     exit 1
@@ -140,13 +170,15 @@ fi
 
 print_status "Checking database connectivity..."
 for i in {1..30}; do
-    if docker-compose -f docker-compose.production.yml exec -T app php artisan tinker --execute="DB::connection()->getPdo();" > /dev/null 2>&1; then
+    if docker-compose -f docker-compose.production.yml exec -T database pg_isready -U ${DB_USERNAME:-board_yet_user} -d ${DB_DATABASE:-board_yet_production} > /dev/null 2>&1; then
         print_status "Database is ready!"
         break
     fi
     if [ $i -eq 30 ]; then
         print_error "Database connection timeout after 30 attempts. Check database container logs."
         docker-compose -f docker-compose.production.yml logs database
+        print_error "Current container status:"
+        docker-compose -f docker-compose.production.yml ps
         exit 1
     fi
     print_status "Waiting for database connection... (attempt $i/30)"
