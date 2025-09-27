@@ -65,6 +65,25 @@ cp docker-compose.production.yml current/
 cp -r docker current/
 cp .env current/.env
 
+# Copy the entire application to current directory
+print_status "Copying application files..."
+cp -r app current/
+cp -r bootstrap current/
+cp -r config current/
+cp -r database current/
+cp -r public current/
+cp -r resources current/
+cp -r routes current/
+cp -r storage current/
+cp -r tests current/
+cp artisan current/
+cp composer.json current/
+cp composer.lock current/
+cp package.json current/
+cp phpunit.xml current/
+cp vite.config.js current/
+cp .gitignore current/
+
 # Verify .env file was copied and has content
 if [ ! -f "current/.env" ]; then
     print_error "Failed to copy .env file to current directory"
