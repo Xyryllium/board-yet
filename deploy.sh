@@ -69,8 +69,24 @@ docker-compose -f docker-compose.production.yml down || true
 
 print_status "Copying production configuration..."
 cp docker-compose.production.yml current/
+
+# Handle docker directory copying with proper permissions
+if [ -d "current/docker" ]; then
+    print_status "Removing existing docker directory..."
+    sudo rm -rf current/docker
+fi
 cp -r docker current/
+
+# Copy .env file
 cp .env current/.env
+
+# Preserve existing SSL certificates if they exist
+if [ -d "current/ssl" ]; then
+    print_status "Preserving existing SSL certificates..."
+    # SSL certificates are already in place, no need to copy
+else
+    print_status "No SSL certificates found in current deployment"
+fi
 
 # Copy the entire application to current directory
 print_status "Copying application files..."
@@ -90,6 +106,14 @@ cp package.json current/
 cp phpunit.xml current/
 cp vite.config.js current/
 cp .gitignore current/
+
+print_status "Setting proper file permissions..."
+# Ensure proper permissions for copied files
+sudo chown -R $USER:$USER current/
+chmod -R 755 current/
+chmod 644 current/.env
+chmod 600 current/ssl/key.pem 2>/dev/null || true
+chmod 644 current/ssl/cert.pem 2>/dev/null || true
 
 print_status "Checking dependencies..."
 
