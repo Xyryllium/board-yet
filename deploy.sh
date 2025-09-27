@@ -137,6 +137,21 @@ if ! docker-compose -f docker-compose.production.yml ps | grep -q "Up"; then
     exit 1
 fi
 
+print_status "Checking database connectivity..."
+for i in {1..30}; do
+    if docker-compose -f docker-compose.production.yml exec -T app php artisan tinker --execute="DB::connection()->getPdo();" > /dev/null 2>&1; then
+        print_status "Database is ready!"
+        break
+    fi
+    if [ $i -eq 30 ]; then
+        print_error "Database connection timeout after 30 attempts. Check database container logs."
+        docker-compose -f docker-compose.production.yml logs database
+        exit 1
+    fi
+    print_status "Waiting for database connection... (attempt $i/30)"
+    sleep 2
+done
+
 print_status "Running database migrations..."
 docker-compose -f docker-compose.production.yml exec -T app php artisan migrate --force
 
