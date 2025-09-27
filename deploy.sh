@@ -42,13 +42,11 @@ if [ ! -f ".env" ]; then
     exit 1
 fi
 
-if [ -d "backup" ]; then
-    print_status "Creating backup of current deployment..."
-    rm -rf backup
-fi
-
 if [ -d "current" ]; then
     print_status "Backing up current deployment..."
+    if [ -d "backup" ]; then
+        rm -rf backup
+    fi
     mv current backup
 fi
 
@@ -83,6 +81,12 @@ cp package.json current/
 cp phpunit.xml current/
 cp vite.config.js current/
 cp .gitignore current/
+
+print_status "Installing dependencies..."
+
+cd current
+docker run --rm -v $(pwd):/var/www board-yet:latest composer install --no-dev --optimize-autoloader
+cd ..
 
 # Verify .env file was copied and has content
 if [ ! -f "current/.env" ]; then
@@ -159,8 +163,8 @@ fi
 
 print_status "🎉 Deployment completed successfully!"
 print_status "Your application should be available at:"
-print_status "  - HTTP:  http://your-domain.com"
-print_status "  - HTTPS: https://your-domain.com (if SSL certificates are configured)"
+print_status "  - HTTP:  http://api.boardyet.com"
+print_status "  - HTTPS: https://api.boardyet.com (if SSL certificates are configured)"
 
 print_status "Useful commands:"
 print_status "  - View logs: docker-compose -f docker-compose.production.yml logs -f"
