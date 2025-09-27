@@ -62,7 +62,21 @@ docker-compose -f docker-compose.production.yml down || true
 
 print_status "Copying production configuration..."
 cp docker-compose.production.yml current/
-cp production.env.example current/.env.example
+cp .env current/.env
+
+# Verify .env file was copied and has content
+if [ ! -f "current/.env" ]; then
+    print_error "Failed to copy .env file to current directory"
+    exit 1
+fi
+
+# Check if .env has database variables
+if ! grep -q "DB_DATABASE=" current/.env; then
+    print_error ".env file is missing DB_DATABASE variable"
+    exit 1
+fi
+
+print_status "Environment file copied successfully"
 
 mkdir -p ssl
 
@@ -84,6 +98,11 @@ fi
 
 print_status "Starting services..."
 cd current
+# Ensure .env file is available for docker-compose
+if [ ! -f ".env" ]; then
+    print_error ".env file not found in current directory. This is required for docker-compose."
+    exit 1
+fi
 docker-compose -f docker-compose.production.yml up -d
 
 print_status "Waiting for services to be healthy..."
