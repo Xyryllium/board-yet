@@ -28,6 +28,10 @@ RUN composer global require \
 
 RUN git config --global --add safe.directory /var/www
 
+RUN chown -R www-data:www-data /var/www
+RUN chmod -R 775 /var/www/storage
+RUN chmod -R 775 /var/www/bootstrap/cache
+
 COPY entrypoint.sh /usr/local/bin/laravel-setup.sh
 RUN chmod +x /usr/local/bin/laravel-setup.sh
 

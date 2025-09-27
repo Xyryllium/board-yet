@@ -1,0 +1,53 @@
+FROM php:8.3-fpm AS base
+
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    libxslt-dev \
+    libzip-dev \
+    zip unzip curl git \
+    ca-certificates \
+    postgresql-client \
+    redis-tools \
+    && docker-php-ext-install pdo_pgsql pgsql xsl zip
+
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+WORKDIR /var/www
+
+COPY composer.json composer.lock ./
+
+RUN composer install \
+    --no-dev \
+    --no-interaction \
+    --prefer-dist \
+    --optimize-autoloader \
+    --no-progress
+
+COPY . .
+
+RUN chown -R www-data:www-data /var/www \
+    && chmod -R 755 /var/www/storage \
+    && chmod -R 755 /var/www/bootstrap/cache
+
+FROM base AS production
+
+RUN composer global require \
+    squizlabs/php_codesniffer \
+    phpmd/phpmd \
+    phpstan/phpstan \
+    && ln -s /root/.composer/vendor/bin/phpstan /usr/local/bin/phpstan \
+    && ln -s /root/.composer/vendor/bin/phpcs /usr/local/bin/phpcs \
+    && ln -s /root/.composer/vendor/bin/phpmd /usr/local/bin/phpmd \
+    && ln -s /root/.composer/vendor/bin/phpcbf /usr/local/bin/phpcbf
+
+COPY entrypoint.production.sh /usr/local/bin/laravel-setup.sh
+RUN chmod +x /usr/local/bin/laravel-setup.sh
+
+ENV APP_ENV=production
+ENV APP_DEBUG=false
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD php artisan tinker --execute="echo 'OK';" || exit 1
+
+ENTRYPOINT ["/usr/local/bin/laravel-setup.sh"]
+CMD ["php-fpm"]
