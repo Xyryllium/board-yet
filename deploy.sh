@@ -274,21 +274,21 @@ print_status "Giving app container time to initialize..."
 sleep 10
 
 print_status "Running database migrations..."
-docker-compose -f docker-compose.production.yml exec --workdir /var/www app php artisan migrate --force
+docker-compose -f docker-compose.production.yml exec app sh -c "cd /var/www && php artisan migrate --force"
 
 print_status "Clearing application caches..."
-docker-compose -f docker-compose.production.yml exec --workdir /var/www app php artisan cache:clear
-docker-compose -f docker-compose.production.yml exec --workdir /var/www app php artisan config:clear
-docker-compose -f docker-compose.production.yml exec --workdir /var/www app php artisan route:clear
+docker-compose -f docker-compose.production.yml exec app sh -c "cd /var/www && php artisan cache:clear"
+docker-compose -f docker-compose.production.yml exec app sh -c "cd /var/www && php artisan config:clear"
+docker-compose -f docker-compose.production.yml exec app sh -c "cd /var/www && php artisan route:clear"
 
 print_status "Optimizing application for production..."
-docker-compose -f docker-compose.production.yml exec --workdir /var/www app php artisan config:cache
-docker-compose -f docker-compose.production.yml exec --workdir /var/www app php artisan route:cache
-docker-compose -f docker-compose.production.yml exec --workdir /var/www app php artisan view:cache
+docker-compose -f docker-compose.production.yml exec app sh -c "cd /var/www && php artisan config:cache"
+docker-compose -f docker-compose.production.yml exec app sh -c "cd /var/www && php artisan route:cache"
+docker-compose -f docker-compose.production.yml exec app sh -c "cd /var/www && php artisan view:cache"
 
 print_status "Setting proper permissions..."
-docker-compose -f docker-compose.production.yml exec --workdir /var/www app chown -R www-data:www-data /var/www/storage
-docker-compose -f docker-compose.production.yml exec --workdir /var/www app chown -R www-data:www-data /var/www/bootstrap/cache
+docker-compose -f docker-compose.production.yml exec app sh -c "cd /var/www && chown -R www-data:www-data /var/www/storage"
+docker-compose -f docker-compose.production.yml exec app sh -c "cd /var/www && chown -R www-data:www-data /var/www/bootstrap/cache"
 
 print_status "Performing health check..."
 # Wait a bit more for nginx to be fully ready
