@@ -274,21 +274,29 @@ print_status "Giving app container time to initialize..."
 sleep 10
 
 print_status "Running database migrations..."
-docker-compose -f docker-compose.production.yml exec app php artisan migrate --force
+cd current
+docker run --rm --network current_app-network -v $(pwd):/var/www --workdir /var/www board-yet:latest php artisan migrate --force
+cd ..
 
 print_status "Clearing application caches..."
-docker-compose -f docker-compose.production.yml exec app php artisan cache:clear
-docker-compose -f docker-compose.production.yml exec app php artisan config:clear
-docker-compose -f docker-compose.production.yml exec app php artisan route:clear
+cd current
+docker run --rm --network current_app-network -v $(pwd):/var/www --workdir /var/www board-yet:latest php artisan cache:clear
+docker run --rm --network current_app-network -v $(pwd):/var/www --workdir /var/www board-yet:latest php artisan config:clear
+docker run --rm --network current_app-network -v $(pwd):/var/www --workdir /var/www board-yet:latest php artisan route:clear
+cd ..
 
 print_status "Optimizing application for production..."
-docker-compose -f docker-compose.production.yml exec app php artisan config:cache
-docker-compose -f docker-compose.production.yml exec app php artisan route:cache
-docker-compose -f docker-compose.production.yml exec app php artisan view:cache
+cd current
+docker run --rm --network current_app-network -v $(pwd):/var/www --workdir /var/www board-yet:latest php artisan config:cache
+docker run --rm --network current_app-network -v $(pwd):/var/www --workdir /var/www board-yet:latest php artisan route:cache
+docker run --rm --network current_app-network -v $(pwd):/var/www --workdir /var/www board-yet:latest php artisan view:cache
+cd ..
 
 print_status "Setting proper permissions..."
-docker-compose -f docker-compose.production.yml exec app chown -R www-data:www-data /var/www/storage
-docker-compose -f docker-compose.production.yml exec app chown -R www-data:www-data /var/www/bootstrap/cache
+cd current
+docker run --rm --network current_app-network -v $(pwd):/var/www --workdir /var/www board-yet:latest chown -R www-data:www-data /var/www/storage
+docker run --rm --network current_app-network -v $(pwd):/var/www --workdir /var/www board-yet:latest chown -R www-data:www-data /var/www/bootstrap/cache
+cd ..
 
 print_status "Performing health check..."
 # Wait a bit more for nginx to be fully ready
