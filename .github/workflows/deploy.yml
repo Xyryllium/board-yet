@@ -33,6 +33,7 @@ jobs:
               cd board-yet
               git fetch origin
               git checkout main
+              git stash
               git pull origin main
             fi
 

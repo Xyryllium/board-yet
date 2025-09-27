@@ -45,7 +45,8 @@ fi
 if [ -d "current" ]; then
     print_status "Backing up current deployment..."
     if [ -d "backup" ]; then
-        rm -rf backup
+        print_status "Removing old backup directory..."
+        sudo rm -rf backup
     fi
     mv current backup
 fi
