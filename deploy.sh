@@ -238,54 +238,62 @@ fi
 
 print_status "Checking database connectivity..."
 for i in {1..30}; do
-    if docker compose -f docker-compose.production.yml exec database pg_isready -U ${DB_USERNAME:-board_yet_user} -d ${DB_DATABASE:-board_yet_production} > /dev/null 2>&1; then
+    if docker-compose -f docker-compose.production.yml exec database pg_isready -U ${DB_USERNAME:-board_yet_user} -d ${DB_DATABASE:-board_yet_production} > /dev/null 2>&1; then
         print_status "Database is ready!"
         break
     fi
     if [ $i -eq 30 ]; then
         print_error "Database connection timeout after 30 attempts. Check database container logs."
-        docker compose -f docker-compose.production.yml logs database
+        docker-compose -f docker-compose.production.yml logs database
         print_error "Current container status:"
-        docker compose -f docker-compose.production.yml ps
+        docker-compose -f docker-compose.production.yml ps
         exit 1
     fi
     print_status "Waiting for database connection... (attempt $i/30)"
     sleep 2
 done
 
+print_status "Waiting for app container to be healthy..."
+for i in {1..30}; do
+    if docker-compose -f docker-compose.production.yml ps app | grep -q "healthy"; then
+        print_status "App container is healthy!"
+        break
+    fi
+    if [ $i -eq 30 ]; then
+        print_error "App container health check timeout after 30 attempts."
+        docker-compose -f docker-compose.production.yml ps
+        docker-compose -f docker-compose.production.yml logs app
+        exit 1
+    fi
+    print_status "Waiting for app container to be healthy... (attempt $i/30)"
+    sleep 2
+done
+
 print_status "Running database migrations..."
-cd current
-docker compose -f docker-compose.production.yml exec app php artisan migrate --force
-cd ..
+docker-compose -f docker-compose.production.yml exec app php artisan migrate --force
 
 print_status "Clearing application caches..."
-cd current
-docker compose -f docker-compose.production.yml exec app php artisan cache:clear
-docker compose -f docker-compose.production.yml exec app php artisan config:clear
-docker compose -f docker-compose.production.yml exec app php artisan route:clear
-cd ..
+docker-compose -f docker-compose.production.yml exec app php artisan cache:clear
+docker-compose -f docker-compose.production.yml exec app php artisan config:clear
+docker-compose -f docker-compose.production.yml exec app php artisan route:clear
 
 print_status "Optimizing application for production..."
-cd current
-docker compose -f docker-compose.production.yml exec app php artisan config:cache
-docker compose -f docker-compose.production.yml exec app php artisan route:cache
-docker compose -f docker-compose.production.yml exec app php artisan view:cache
-cd ..
+docker-compose -f docker-compose.production.yml exec app php artisan config:cache
+docker-compose -f docker-compose.production.yml exec app php artisan route:cache
+docker-compose -f docker-compose.production.yml exec app php artisan view:cache
 
 print_status "Setting proper permissions..."
-cd current
-docker compose -f docker-compose.production.yml exec app chown -R www-data:www-data /var/www/storage
-docker compose -f docker-compose.production.yml exec app chown -R www-data:www-data /var/www/bootstrap/cache
-cd ..
+docker-compose -f docker-compose.production.yml exec app chown -R www-data:www-data /var/www/storage
+docker-compose -f docker-compose.production.yml exec app chown -R www-data:www-data /var/www/bootstrap/cache
 
 print_status "Performing health check..."
 # Wait a bit more for nginx to be fully ready
 sleep 5
 
 # Check if nginx container is running
-if ! docker compose -f docker-compose.production.yml ps nginx | grep -q "Up"; then
+if ! docker-compose -f docker-compose.production.yml ps nginx | grep -q "Up"; then
     print_error "Nginx container is not running. Checking logs..."
-    docker compose -f docker-compose.production.yml logs nginx
+    docker-compose -f docker-compose.production.yml logs nginx
     exit 1
 fi
 
