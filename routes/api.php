@@ -13,6 +13,14 @@ use Illuminate\Support\Facades\Route;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
+Route::get('/health', function () {
+    return response()->json([
+        'status' => 'ok',
+        'timestamp' => now()->toISOString(),
+        'version' => config('app.version', '1.0.0')
+    ]);
+});
+
 Route::post('/organizations/invitations/accept',
     [OrganizationMemberController::class, 'acceptInvitation']
 );
