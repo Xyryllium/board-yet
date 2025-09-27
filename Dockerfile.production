@@ -8,7 +8,9 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     postgresql-client \
     redis-tools \
-    && docker-php-ext-install pdo_pgsql pgsql xsl zip
+    && docker-php-ext-install pdo_pgsql pgsql xsl zip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
@@ -21,13 +23,17 @@ RUN composer install \
     --no-interaction \
     --prefer-dist \
     --optimize-autoloader \
-    --no-progress
+    --no-progress \
+    --no-scripts \
+    && composer clear-cache
 
 COPY . .
 
-RUN chown -R www-data:www-data /var/www \
+RUN mkdir -p /var/www/bootstrap/cache \
+    && chown -R www-data:www-data /var/www \
     && chmod -R 755 /var/www/storage \
-    && chmod -R 755 /var/www/bootstrap/cache
+    && chmod -R 755 /var/www/bootstrap/cache \
+    && composer run-script post-autoload-dump --no-interaction
 
 FROM base AS production
 
