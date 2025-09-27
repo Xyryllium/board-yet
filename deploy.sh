@@ -91,35 +91,59 @@ cp phpunit.xml current/
 cp vite.config.js current/
 cp .gitignore current/
 
-print_status "Installing dependencies..."
+print_status "Checking dependencies..."
 
 cd current
-print_status "Cleaning up existing dependencies..."
-sudo rm -rf vendor composer.lock
 
-print_status "Installing Composer dependencies..."
-for attempt in {1..3}; do
-    print_status "Composer install attempt $attempt/3..."
-    if docker run --rm \
-        -v $(pwd):/var/www \
-        -v ~/.composer/cache:/tmp/composer-cache \
-        --workdir /var/www \
-        board-yet:latest \
-        composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-suggest; then
-        print_status "Dependencies installed successfully!"
-        break
-    else
-        print_warning "Composer install attempt $attempt failed"
-        if [ $attempt -eq 3 ]; then
-            print_error "All Composer install attempts failed. Check disk space and network connectivity."
-            print_error "Current disk usage:"
-            df -h
-            exit 1
-        fi
-        print_status "Retrying in 5 seconds..."
-        sleep 5
+NEED_COMPOSER_INSTALL=false
+
+if [ ! -d "vendor" ]; then
+    print_status "No vendor directory found - dependencies need to be installed"
+    NEED_COMPOSER_INSTALL=true
+elif [ -f "composer.lock" ] && [ -f "../composer.lock" ]; then
+    if ! cmp -s composer.lock ../composer.lock; then
+        print_status "composer.lock has changed - dependencies need to be updated"
+        NEED_COMPOSER_INSTALL=true
     fi
-done
+else
+    print_status "composer.lock not found - dependencies need to be installed"
+    NEED_COMPOSER_INSTALL=true
+fi
+
+if [ "$NEED_COMPOSER_INSTALL" = true ]; then
+    print_status "Installing/updating Composer dependencies..."
+    
+    if [ -d "vendor" ]; then
+        print_status "Removing existing vendor directory..."
+        sudo rm -rf vendor
+    fi
+    
+    for attempt in {1..3}; do
+        print_status "Composer install attempt $attempt/3..."
+        if docker run --rm \
+            -v $(pwd):/var/www \
+            -v ~/.composer/cache:/tmp/composer-cache \
+            --workdir /var/www \
+            board-yet:latest \
+            composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-suggest; then
+            print_status "Dependencies installed successfully!"
+            break
+        else
+            print_warning "Composer install attempt $attempt failed"
+            if [ $attempt -eq 3 ]; then
+                print_error "All Composer install attempts failed. Check disk space and network connectivity."
+                print_error "Current disk usage:"
+                df -h
+                exit 1
+            fi
+            print_status "Retrying in 5 seconds..."
+            sleep 5
+        fi
+    done
+else
+    print_status "Dependencies are up to date - skipping Composer install"
+fi
+
 cd ..
 
 if [ ! -f "current/.env" ]; then
@@ -203,10 +227,38 @@ docker-compose -f docker-compose.production.yml exec -T app chown -R www-data:ww
 docker-compose -f docker-compose.production.yml exec -T app chown -R www-data:www-data /var/www/bootstrap/cache
 
 print_status "Performing health check..."
-if curl -f http://localhost/api/health > /dev/null 2>&1; then
-    print_status "✅ Application is healthy and responding!"
-else
-    print_warning "⚠️  Health check failed. Application may not be fully ready yet."
+# Wait a bit more for nginx to be fully ready
+sleep 5
+
+# Check if nginx container is running
+if ! docker-compose -f docker-compose.production.yml ps nginx | grep -q "Up"; then
+    print_error "Nginx container is not running. Checking logs..."
+    docker-compose -f docker-compose.production.yml logs nginx
+    exit 1
+fi
+
+# Try health check with retries
+HEALTH_CHECK_SUCCESS=false
+for i in {1..5}; do
+    print_status "Health check attempt $i/5..."
+    if curl -f http://localhost/api/health > /dev/null 2>&1; then
+        print_status "✅ Application is healthy and responding!"
+        HEALTH_CHECK_SUCCESS=true
+        break
+    else
+        print_warning "Health check attempt $i failed, retrying in 3 seconds..."
+        sleep 3
+    fi
+done
+
+if [ "$HEALTH_CHECK_SUCCESS" = false ]; then
+    print_warning "⚠️  Health check failed after 5 attempts. Application may not be fully ready yet."
+    print_warning "Container status:"
+    docker-compose -f docker-compose.production.yml ps
+    print_warning "Nginx logs (last 20 lines):"
+    docker-compose -f docker-compose.production.yml logs --tail=20 nginx
+    print_warning "App logs (last 20 lines):"
+    docker-compose -f docker-compose.production.yml logs --tail=20 app
 fi
 
 print_status "🎉 Deployment completed successfully!"

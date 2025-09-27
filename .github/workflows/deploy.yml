@@ -44,5 +44,22 @@ jobs:
 
       - name: Health Check
         run: |
-          sleep 30  # Wait for deployment to complete
-          curl -f http://${{ secrets.HOST }}/api/health || exit 1
+          echo "Waiting for deployment to complete..."
+          sleep 45  # Wait longer for deployment to complete
+
+          echo "Checking if application is responding..."
+          for i in {1..10}; do
+            echo "Health check attempt $i/10..."
+            if curl -f --connect-timeout 10 --max-time 30 https://${{ secrets.HOST }}/api/health; then
+              echo "✅ Application is healthy and responding!"
+              exit 0
+            else
+              echo "Health check attempt $i failed, retrying in 10 seconds..."
+              sleep 10
+            fi
+          done
+
+          echo "❌ Health check failed after 10 attempts"
+          echo "Checking if server is reachable..."
+          curl -v https://${{ secrets.HOST }}/ || true
+          exit 1
