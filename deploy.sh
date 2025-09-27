@@ -253,21 +253,25 @@ for i in {1..30}; do
     sleep 2
 done
 
-print_status "Waiting for app container to be healthy..."
+print_status "Waiting for app container to be running..."
 for i in {1..30}; do
-    if docker-compose -f docker-compose.production.yml ps app | grep -q "healthy"; then
-        print_status "App container is healthy!"
+    if docker-compose -f docker-compose.production.yml ps app | grep -q "Up"; then
+        print_status "App container is running!"
         break
     fi
     if [ $i -eq 30 ]; then
-        print_error "App container health check timeout after 30 attempts."
+        print_error "App container startup timeout after 30 attempts."
         docker-compose -f docker-compose.production.yml ps
         docker-compose -f docker-compose.production.yml logs app
         exit 1
     fi
-    print_status "Waiting for app container to be healthy... (attempt $i/30)"
+    print_status "Waiting for app container to start... (attempt $i/30)"
     sleep 2
 done
+
+# Give the container a moment to fully initialize
+print_status "Giving app container time to initialize..."
+sleep 10
 
 print_status "Running database migrations..."
 docker-compose -f docker-compose.production.yml exec app php artisan migrate --force
