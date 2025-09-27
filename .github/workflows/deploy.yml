@@ -1,0 +1,47 @@
+name: Deploy Board Yet to EC2
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
+
+      - name: Deploy to EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.HOST }} << 'EOF'
+            set -e
+
+            cd ${{ secrets.DEPLOY_DIR }}
+
+            if [ ! -d "board-yet" ]; then
+              git clone https://github.com/${{ github.repository }} board-yet
+              cd board-yet
+            else
+              cd board-yet
+              git fetch origin
+              git checkout main
+              git pull origin main
+            fi
+
+            # Deploy using production script
+            chmod +x deploy.sh
+            ./deploy.sh production
+          EOF
+
+      - name: Health Check
+        run: |
+          sleep 30  # Wait for deployment to complete
+          curl -f https://${{ secrets.HOST }}/api/health || exit 1
