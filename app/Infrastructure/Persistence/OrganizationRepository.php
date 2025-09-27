@@ -5,6 +5,7 @@ namespace App\Infrastructure\Persistence;
 use App\Domain\Organization\Entities\Organization as EntitiesOrganization;
 use App\Domain\Organization\Repositories\OrganizationRepositoryInterface;
 use App\Models\Organization;
+use Exception;
 
 class OrganizationRepository implements OrganizationRepositoryInterface
 {
@@ -37,6 +38,30 @@ class OrganizationRepository implements OrganizationRepositoryInterface
         }
 
         return $this->toDomain($organization);
+    }
+
+    public function update(int $organizationId, array $data): Organization
+    {
+        $organization = $this->organization->find($organizationId);
+
+        if (!$organization) {
+            throw new Exception("Organization with ID {$organizationId} not found");
+        }
+
+        $organization->update($data);
+
+        return $organization->fresh();
+    }
+
+    public function isSubdomainAvailable(string $subdomain, ?int $excludeId = null): bool
+    {
+        $query = $this->organization->where('subdomain', $subdomain);
+
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        return !$query->exists();
     }
 
     private function toDomain(Organization $organization): EntitiesOrganization

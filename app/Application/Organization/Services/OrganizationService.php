@@ -154,4 +154,63 @@ class OrganizationService
 
         return "{$protocol}://{$organization->subdomain}.{$domain}{$port}/invitations/accept/{$invitation->token}";
     }
+
+    public function updateSettings(int $organizationId, array $data): Organization
+    {
+        if (isset($data['subdomain'])) {
+            $this->orgDomainService->validateSubdomain($data['subdomain']);
+        }
+
+        $updateData = $this->prepareSettingsUpdateData($organizationId, $data);
+
+        return $this->orgRepository->update($organizationId, $updateData);
+    }
+
+    private function prepareSettingsUpdateData(int $organizationId, array $data): array
+    {
+        $existingOrganization = $this->orgRepository->findById($organizationId);
+
+        if (!$existingOrganization) {
+            throw new OrganizationNotFoundException();
+        }
+
+        $existingSettings = $existingOrganization->getSettings();
+        $newSettings = $this->arrayMergeRecursive($existingSettings, $data['settings']);
+
+        $updateData = [
+            'settings' => $newSettings,
+        ];
+
+        if (isset($data['subdomain'])) {
+            $updateData['subdomain'] = $data['subdomain'];
+        }
+
+        return $updateData;
+    }
+
+    private function arrayMergeRecursive(array $array1, array $array2): array
+    {
+        $merged = $array1;
+
+        foreach ($array2 as $key => $value) {
+            if (isset($merged[$key]) && is_array($merged[$key]) && is_array($value)) {
+                $merged[$key] = $this->arrayMergeRecursive($merged[$key], $value);
+                continue;
+            }
+
+            $merged[$key] = $value;
+        }
+
+        return $merged;
+    }
+
+    public function validateSubdomainFormat(string $subdomain): void
+    {
+        $this->orgDomainService->validateSubdomain($subdomain);
+    }
+
+    public function isSubdomainAvailable(string $subdomain, ?int $excludeId = null): bool
+    {
+        return $this->orgRepository->isSubdomainAvailable($subdomain, $excludeId);
+    }
 }

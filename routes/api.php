@@ -19,18 +19,20 @@ Route::post('/organizations/invitations/accept',
 Route::get('/organizations/invitations/details/{id}', 
     [OrganizationMemberController::class, 'listOrgDetails']
 );
-Route::get('/organizations/subdomain/{subdomain}', [OrganizationController::class, 'listOrgDetailsBySubdomain']);
 
 
 Route::middleware([AuthenticateApiToken::class])->group(function () {
     Route::get('/auth/me', [AuthController::class, 'currentUser']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/organizations', [OrganizationController::class, 'store']);
+    Route::get('/organizations/subdomain/validate', [OrganizationController::class, 'validateSubdomain']);
+    Route::get('/organizations/subdomain/details/{subdomain}', [OrganizationController::class, 'listOrgDetailsBySubdomain']);
 });
 
 Route::middleware([AuthenticateApiToken::class, 'org.scope'])->group(function () {
     Route::prefix('organizations')->group(function () {
         Route::post('/{id}/invite', [OrganizationMemberController::class, 'invite']);
+        Route::put('/{id}/settings', [OrganizationController::class, 'updateSettings']);
     });
     Route::prefix('boards')->group(function () {
         Route::post('/', [BoardController::class, 'store']);

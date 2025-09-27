@@ -18,6 +18,7 @@ class OrganizationFactory extends Factory
     {
         return [
             'name' => fake()->name(),
+            'owner_id' => \App\Models\User::factory(),
         ];
     }
 }
