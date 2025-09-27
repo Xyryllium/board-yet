@@ -28,13 +28,6 @@ if [ "$APP_ENV" = "production" ]; then
     php artisan view:cache
     php artisan event:cache
 
-    echo "Running database migrations..."
-    php artisan migrate --force
-
-    php artisan cache:clear
-    php artisan config:clear
-    php artisan route:clear
-
     chown -R www-data:www-data /var/www/storage
     chown -R www-data:www-data /var/www/bootstrap/cache
     chmod -R 755 /var/www/storage
