@@ -9,4 +9,9 @@ interface UserRepositoryInterface
 {
     public function save(User $user): EloquentUser;
     public function findByEmail(string $email): ?EloquentUser;
+    public function findById(int $userId): ?EloquentUser;
+    public function getUserRoleInOrganization(int $userId, int $organizationId): ?string;
+    public function getUserCurrentOrganizationId(int $userId): ?int;
+    public function getUserOrganizations(int $userId): array;
+    public function getUsersByOrganizationId(User $user, int $organizationId): array;
 }

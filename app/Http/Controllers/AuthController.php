@@ -2,73 +2,138 @@
 
 namespace App\Http\Controllers;
 
+use Exception;
+use App\Application\Auth\Services\AuthService;
 use App\Application\User\Services\UserService;
+use App\Domain\Auth\Exceptions\InvalidCredentialsException;
+use App\Http\Requests\RegisterRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Contracts\Auth\Factory as AuthFactory;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
-    public function __construct(private UserService $userService, private AuthFactory $auth)
-    {
+    public function __construct(
+        private AuthService $authService,
+        private UserService $userService
+    ) {
     }
 
-    public function register(Request $request): JsonResponse
+    public function register(RegisterRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'password' => [
-                        'required',
-                        'string',
-                        'min:8',
-                        // Minimum length
-                        'regex:/[a-z]/',
-                        // At least one lowercase letter
-                        'regex:/[A-Z]/',
-                        // At least one uppercase letter
-                        'regex:/[0-9]/',
-                        // At least one number
-                        'regex:/[@$!%*#?&]/',
-                        // At least one special character
-                    ],
-        ]);
+        try {
+            $data = $request->validated();
 
-        $user = $this->userService->create($data);
+            $authenticatedUser = $this->authService->register($data);
 
-        $token = $user->createToken('api-token')->plainTextToken;
-
-        return response()->json([
-            'message' => 'User created successfully',
-            'token' => $token,
-        ]);
+            return response()->json([
+                'message' => 'User created successfully',
+                ...$authenticatedUser->toArray(),
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (QueryException $e) {
+            return response()->json([
+                'message' => 'Database error occurred'
+            ], 500);
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => 'An unexpected error occurred'
+            ], 500);
+        }
     }
 
     public function login(Request $request): JsonResponse
     {
-        $credentials = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
-        ]);
+        try {
+            $credentials = $request->validate([
+                'email' => 'required|email',
+                'password' => 'required',
+            ]);
 
-        if (!$this->auth->guard()->attempt($credentials)) {
-            return response()->json(['Invalid credentials'], 401);
+            $sessionData = $this->authService->loginWithSession($credentials, 7);
+
+            $response = response()->json($sessionData->getResponseData());
+
+            return $response;
+        } catch (InvalidCredentialsException $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 401);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (Exception $e) {
+            Log::error('Login error: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'message' => 'An unexpected error occurred',
+                'error' => $e->getMessage()
+            ], 500);
         }
+    }
 
-        $user = $this->auth->guard()->user();
+    public function currentUser(Request $request): JsonResponse
+    {
+        try {
+            $user = $request->user();
 
-        $token = $user->createToken('api-token')->plainTextToken;
+            if (!$user) {
+                return response()->json([
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
 
-        return response()->json([
-            'user' => $user,
-            'token' => $token,
-        ]);
+            $userData = $this->userService->getCurrentUser($user);
+
+            return response()->json($userData);
+        } catch (Exception $e) {
+            Log::error('Get user data error: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'message' => 'An unexpected error occurred'
+            ], 500);
+        }
     }
 
     public function logout(Request $request): JsonResponse
     {
-        $request->user()->tokens()->delete();
+        try {
+            $user = $request->user();
 
-        return response()->json(['message' => 'Logged out']);
+            if ($user) {
+                $token = $user->currentAccessToken();
+                if ($token) {
+                    $this->authService->logout($token->plainTextToken ?? '');
+                }
+            }
+
+            $response = response()->json(['message' => 'Logged out successfully']);
+
+            return $response;
+        } catch (Exception $e) {
+            Log::error('Logout error: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'message' => 'Logout failed'
+            ], 500);
+        }
     }
 }

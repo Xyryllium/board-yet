@@ -2,25 +2,27 @@
 
 namespace App\Application\Organization\Services;
 
+use Exception;
+use RuntimeException;
 use App\Domain\Organization\Entities\OrganizationInvitation;
+use App\Domain\Organization\Entities\Organization as EntitiesOrganization;
 use App\Domain\Organization\Enums\InvitationStatus;
+use App\Domain\Organization\Exceptions\OrganizationNotFoundException;
 use App\Domain\Organization\Repositories\OrganizationRepositoryInterface;
 use App\Domain\Organization\Repositories\OrgInvitationRepositoryInterface;
 use App\Domain\Organization\Services\OrganizationDomainService;
+use App\Domain\User\Exceptions\UserNotRegisteredException;
 use App\Domain\User\Repositories\UserRepositoryInterface;
-use App\Mail\OrganizationInvitationMail;
+use App\Events\OrganizationInvitationSent;
 use App\Models\Organization;
 use App\Models\OrganizationInvitation as ModelsOrganizationInvitation;
 use App\Models\User;
 use Illuminate\Database\Connection;
 use Illuminate\Log\LogManager;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Str;
 use Psr\Log\LoggerInterface;
 
-/**
- * @SuppressWarnings(MissingImport)
- */
 class OrganizationService
 {
     public function __construct(
@@ -40,11 +42,19 @@ class OrganizationService
     {
         $this->orgDomainService->validateOrganizationName($data['name']);
 
+        if (isset($data['subdomain'])) {
+            $this->orgDomainService->validateSubdomain($data['subdomain']);
+        }
+
         return $this->database->transaction(function () use ($user, $data) {
-            $organization = $this->orgRepository->save([
+            $organizationData = [
                 'name' => $data['name'],
-                'owner_id' => $user->id
-            ]);
+                'owner_id' => $user->id,
+                'subdomain' => $data['subdomain'] ?? null,
+                'settings' => $data['settings'] ?? []
+            ];
+
+            $organization = $this->orgRepository->save($organizationData);
 
             $organization->users()->attach($user->id, ['role' => 'admin']);
 
@@ -71,36 +81,41 @@ class OrganizationService
 
             $invitation = $this->invitationRepository->create($invitationEntity);
 
-            $this->sendMail($invitation, $email, $organizationId);
+            $this->logger->info("Dispatching OrganizationInvitationSent event", [
+                'invitation_id' => $invitation->id,
+                'email' => $invitation->email,
+            ]);
+
+            Event::dispatch(new OrganizationInvitationSent($invitation));
 
             return $invitation;
-        } catch (\Exception $e) {
-            $this->logger->error("Failed to create and send organization invitation", [
+        } catch (Exception $e) {
+            $this->logger->error("Failed to create organization invitation", [
                 'organization_id' => $organizationId,
                 'email' => $email,
                 'error' => $e->getMessage(),
             ]);
 
-            throw new \RuntimeException("Failed to create organization invitation: " . $e->getMessage());
+            throw new RuntimeException("Failed to create organization invitation: " . $e->getMessage());
         }
     }
 
-    public function acceptInvitation(string $token, User $user): void
+    public function acceptInvitation(string $token, ?User $user): void
     {
         $invitation = $this->invitationRepository->findByToken($token);
 
         if (!$invitation) {
-            throw new \RuntimeException("Invalid invitation token");
+            throw new RuntimeException("Invalid invitation token");
+        }
+
+        $user = $user ? $this->userRepository->findByEmail($user->email) : null;
+
+        if (!$user) {
+            throw new UserNotRegisteredException($invitation->email, $token);
         }
 
         if (strcasecmp($invitation->email, $user->email) !== 0) {
-            throw new \RuntimeException("This invitation does not belong to your account.");
-        }
-
-        $user = $this->userRepository->findByEmail($user->email);
-
-        if (!$user) {
-            throw new \RuntimeException("User not found");
+            throw new RuntimeException("This invitation does not belong to your account.");
         }
 
         $user->joinOrganization($invitation->organization_id, $invitation->role);
@@ -108,24 +123,94 @@ class OrganizationService
         $this->invitationRepository->updateStatus($token, InvitationStatus::ACCEPTED->value);
     }
 
-    private function sendMail(ModelsOrganizationInvitation $invitation, string $email, int $organizationId): void
+    public function listOrgDetails(string $token): array
     {
-        try {
-            Mail::to($email)->send(new OrganizationInvitationMail($invitation));
+        $organization = $this->invitationRepository->findOrgDetailsByToken($token);
 
-            $this->logger->info("Invitation email sent successfully", [
-                'organization_id' => $organizationId,
-                'email' => $email,
-                'invitation_id' => $invitation->id ?? null,
-            ]);
-        } catch (\Exception $e) {
-            $this->logger->error("Failed to send invitation email", [
-                'organization_id' => $organizationId,
-                'email' => $email,
-                'error' => $e->getMessage(),
-            ]);
-
-            throw new \RuntimeException("Failed to send invitation email: " . $e->getMessage());
+        if (!$organization) {
+            throw new OrganizationNotFoundException();
         }
+
+        return $organization;
+    }
+
+    public function findBySubdomain(string $subdomain): ?EntitiesOrganization
+    {
+        return $this->orgRepository->findBySubdomain($subdomain);
+    }
+
+    public function generateInvitationUrl(ModelsOrganizationInvitation $invitation): string
+    {
+        $organization = $invitation->organization;
+
+        /** @phpstan-ignore-next-line */
+        if (!$organization->subdomain) {
+            return config('app.frontend_url') . "/invitations/accept/{$invitation->token}";
+        }
+
+        $domain = config('app.domain', 'localhost');
+        $protocol = config('app.env') === 'production' ? 'https' : 'http';
+        $port = config('app.env') === 'local' ? ':' . config('app.port', '8000') : '';
+
+        return "{$protocol}://{$organization->subdomain}.{$domain}{$port}/invitations/accept/{$invitation->token}";
+    }
+
+    public function updateSettings(int $organizationId, array $data): Organization
+    {
+        if (isset($data['subdomain'])) {
+            $this->orgDomainService->validateSubdomain($data['subdomain']);
+        }
+
+        $updateData = $this->prepareSettingsUpdateData($organizationId, $data);
+
+        return $this->orgRepository->update($organizationId, $updateData);
+    }
+
+    private function prepareSettingsUpdateData(int $organizationId, array $data): array
+    {
+        $existingOrganization = $this->orgRepository->findById($organizationId);
+
+        if (!$existingOrganization) {
+            throw new OrganizationNotFoundException();
+        }
+
+        $existingSettings = $existingOrganization->getSettings();
+        $newSettings = $this->arrayMergeRecursive($existingSettings, $data['settings']);
+
+        $updateData = [
+            'settings' => $newSettings,
+        ];
+
+        if (isset($data['subdomain'])) {
+            $updateData['subdomain'] = $data['subdomain'];
+        }
+
+        return $updateData;
+    }
+
+    private function arrayMergeRecursive(array $array1, array $array2): array
+    {
+        $merged = $array1;
+
+        foreach ($array2 as $key => $value) {
+            if (isset($merged[$key]) && is_array($merged[$key]) && is_array($value)) {
+                $merged[$key] = $this->arrayMergeRecursive($merged[$key], $value);
+                continue;
+            }
+
+            $merged[$key] = $value;
+        }
+
+        return $merged;
+    }
+
+    public function validateSubdomainFormat(string $subdomain): void
+    {
+        $this->orgDomainService->validateSubdomain($subdomain);
+    }
+
+    public function isSubdomainAvailable(string $subdomain, ?int $excludeId = null): bool
+    {
+        return $this->orgRepository->isSubdomainAvailable($subdomain, $excludeId);
     }
 }

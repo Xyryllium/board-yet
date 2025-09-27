@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class BoardColumn extends Model
 {
+    use HasFactory;
+
     protected $table = 'columns';
 
     protected $fillable = [
@@ -21,6 +24,6 @@ class BoardColumn extends Model
 
     public function cards()
     {
-        return $this->hasMany(Card::class)->orderBy('order');
+        return $this->hasMany(Card::class, 'column_id')->orderBy('order');
     }
 }
