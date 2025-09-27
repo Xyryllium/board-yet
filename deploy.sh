@@ -62,6 +62,7 @@ docker-compose -f docker-compose.production.yml down || true
 
 print_status "Copying production configuration..."
 cp docker-compose.production.yml current/
+cp -r docker current/
 cp .env current/.env
 
 # Verify .env file was copied and has content
