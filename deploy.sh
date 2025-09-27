@@ -80,13 +80,33 @@ cp -r docker current/
 # Copy .env file
 cp .env current/.env
 
-# Preserve existing SSL certificates if they exist
-if [ -d "current/ssl" ]; then
-    print_status "Preserving existing SSL certificates..."
-    # SSL certificates are already in place, no need to copy
+# Handle SSL certificates - preserve across deployments
+mkdir -p current/ssl
+
+if [ -d "backup/ssl" ] && [ -f "backup/ssl/cert.pem" ] && [ -f "backup/ssl/key.pem" ]; then
+    print_status "Copying SSL certificates from previous deployment..."
+    cp backup/ssl/cert.pem current/ssl/
+    cp backup/ssl/key.pem current/ssl/
+elif [ -f "current/ssl/cert.pem" ] && [ -f "current/ssl/key.pem" ]; then
+    print_status "SSL certificates already in place..."
 else
-    print_status "No SSL certificates found in current deployment"
+    print_status "No SSL certificates found - creating self-signed certificates for development..."
+    if command -v openssl > /dev/null 2>&1; then
+        openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+            -keyout current/ssl/key.pem \
+            -out current/ssl/cert.pem \
+            -subj "/C=US/ST=State/L=City/O=Organization/CN=api.boardyet.com"
+    else
+        print_warning "OpenSSL not available - HTTPS will not work without SSL certificates"
+        # Create empty files to prevent nginx errors
+        touch current/ssl/cert.pem current/ssl/key.pem
+    fi
 fi
+
+# Set proper permissions for SSL certificates
+chmod 644 current/ssl/cert.pem
+chmod 600 current/ssl/key.pem
+print_status "SSL certificate permissions set"
 
 # Copy the entire application to current directory
 print_status "Copying application files..."
