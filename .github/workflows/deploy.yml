@@ -45,4 +45,4 @@ jobs:
       - name: Health Check
         run: |
           sleep 30  # Wait for deployment to complete
-          curl -f https://${{ secrets.HOST }}/api/health || exit 1
+          curl -f http://${{ secrets.HOST }}/api/health || exit 1
