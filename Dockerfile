@@ -26,7 +26,11 @@ RUN composer install \
 
 COPY . .
 
-RUN composer run-script post-autoload-dump --no-interaction
+RUN mkdir -p /var/www/bootstrap/cache \
+    && chown -R www-data:www-data /var/www \
+    && chmod -R 755 /var/www/storage \
+    && chmod -R 755 /var/www/bootstrap/cache \
+    && composer run-script post-autoload-dump --no-interaction
 
 RUN composer global require \
     squizlabs/php_codesniffer \
@@ -37,10 +41,7 @@ RUN composer global require \
     && ln -s /root/.composer/vendor/bin/phpmd /usr/local/bin/phpmd \
     && ln -s /root/.composer/vendor/bin/phpcbf /usr/local/bin/phpcbf
 
-RUN git config --global --add safe.directory /var/www \
-    && chown -R www-data:www-data /var/www \
-    && chmod -R 755 /var/www/storage \
-    && chmod -R 755 /var/www/bootstrap/cache
+RUN git config --global --add safe.directory /var/www
 
 COPY entrypoint.sh /usr/local/bin/laravel-setup.sh
 RUN chmod +x /usr/local/bin/laravel-setup.sh
