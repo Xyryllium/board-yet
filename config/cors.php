@@ -30,9 +30,6 @@ return [
         
         // Production origins
         'https://boardyet.com',
-        'https://www.boardyet.com',
-        'https://app.boardyet.com',
-        'https://api.boardyet.com',
         
         // Legacy/test origins
         'https://api-test-board.com',
@@ -40,7 +37,11 @@ return [
         'https://*.api-test-board.com',
     ],
 
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => [
+        'https://.*\.boardyet\.com',
+    ],
+
+    'allowed_credentials' => true,
 
     'allowed_headers' => ['*'],
 
