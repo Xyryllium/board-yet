@@ -19,6 +19,10 @@ class AuthenticateApiToken
         $token = $request->bearerToken();
 
         if (!$token) {
+            $token = $request->cookie('board_yet_auth_token');
+        }
+
+        if (!$token) {
             return response()->json([
                 'message' => 'Unauthenticated.'
             ], 401);
