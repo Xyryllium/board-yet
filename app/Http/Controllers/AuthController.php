@@ -61,6 +61,20 @@ class AuthController extends Controller
 
             $response = response()->json($sessionData->getResponseData());
 
+            if (isset($sessionData->getResponseData()['token'])) {
+                $response->cookie(
+                    'board_yet_auth_token',
+                    $sessionData->getResponseData()['token'],
+                    config('session.lifetime'),
+                    config('session.path'),
+                    config('session.domain'),
+                    true,
+                    false,
+                    false,
+                    config('session.same_site')
+                );
+            }
+
             return $response;
         } catch (InvalidCredentialsException $e) {
             return response()->json([
@@ -123,6 +137,18 @@ class AuthController extends Controller
             }
 
             $response = response()->json(['message' => 'Logged out successfully']);
+
+            $response->cookie(
+                'board_yet_auth_token',
+                '',
+                -1, // Expire immediately
+                '/',
+                config('session.domain'),
+                true,
+                false,
+                false,
+                'strict'
+            );
 
             return $response;
         } catch (Exception $e) {
