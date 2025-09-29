@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => [],
 
     'allowed_methods' => ['*'],
 
@@ -25,8 +25,6 @@ return [
         'http://localhost:3000',
         'http://127.0.0.1:5173',
         'http://127.0.0.1:3000',
-        'http://*.localhost:5173',
-        'http://team-stark.localhost:5173',
         
         // Production origins
         'https://boardyet.com',
@@ -34,11 +32,12 @@ return [
         // Legacy/test origins
         'https://api-test-board.com',
         'http://api-test-board.com:8000',
-        'https://*.api-test-board.com',
     ],
 
     'allowed_origins_patterns' => [
+        'http://.*\.localhost:5173',
         'https://.*\.boardyet\.com',
+        'https://.*\.api-test-board\.com',
     ],
 
     'allowed_credentials' => true,
