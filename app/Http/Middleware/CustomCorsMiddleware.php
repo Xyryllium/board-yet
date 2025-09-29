@@ -36,11 +36,9 @@ class CustomCorsMiddleware
         }
 
         if ($isAllowedOrigin) {
-            if ($request->getMethod() === 'OPTIONS') {
-                $response = response('', 200);
-            } else {
-                $response = $next($request);
-            }
+            $response = $request->getMethod() === 'OPTIONS'
+                ? response('', 200)
+                : $next($request);
 
             $response->headers->set('Access-Control-Allow-Origin', $origin);
             $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
