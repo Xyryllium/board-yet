@@ -11,7 +11,8 @@ use Illuminate\Queue\SerializesModels;
 
 class PasswordResetMail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable;
+    use SerializesModels;
 
     /**
      * Create a new message instance.
@@ -43,7 +44,8 @@ class PasswordResetMail extends Mailable
             with: [
                 'token' => $this->token,
                 'email' => $this->email,
-                'resetUrl' => config('app.frontend_url') . '/reset-password?token=' . $this->token . '&email=' . urlencode($this->email),
+                'resetUrl' => config('app.frontend_url') . '/reset-password?token=' .
+                                $this->token . '&email=' . urlencode($this->email),
             ]
         );
     }

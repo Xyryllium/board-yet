@@ -31,7 +31,7 @@ class CleanupExpiredPasswordResetTokens extends Command
             ->delete();
 
         $this->info("Cleaned up {$deletedCount} expired password reset tokens.");
-        
+
         return Command::SUCCESS;
     }
 }

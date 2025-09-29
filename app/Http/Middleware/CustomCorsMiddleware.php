@@ -16,11 +16,11 @@ class CustomCorsMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         $origin = $request->header('Origin');
-        
+
         $allowedOrigins = config('cors.allowed_origins', []);
 
         $allowedPatterns = config('cors.allowed_origins_patterns', []);
-        
+
         $isAllowedOrigin = in_array($origin, $allowedOrigins);
 
         if (!$isAllowedOrigin) {
@@ -34,13 +34,16 @@ class CustomCorsMiddleware
 
         if ($isAllowedOrigin) {
             $response = $next($request);
-            
+
             $response->headers->set('Access-Control-Allow-Origin', $origin);
             $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-            $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-App-Name, X-App-Version, X-CSRF-TOKEN, X-XSRF-TOKEN');
+            $response->headers->set(
+                'Access-Control-Allow-Headers',
+                'Content-Type, Authorization, X-Requested-With, X-App-Name, X-App-Version, X-CSRF-TOKEN, X-XSRF-TOKEN'
+            );
             $response->headers->set('Access-Control-Allow-Credentials', 'true');
             $response->headers->set('Access-Control-Max-Age', '86400');
-            
+
             return $response;
         }
 

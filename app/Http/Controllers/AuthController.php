@@ -193,7 +193,6 @@ class AuthController extends Controller
                 'success' => true,
                 'message' => 'Password reset link has been sent to your email address.'
             ], 200);
-
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
@@ -232,7 +231,6 @@ class AuthController extends Controller
                 'success' => true,
                 'message' => 'Password has been reset successfully'
             ], 200);
-
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
