@@ -28,6 +28,7 @@ return [
         
         // Production origins
         'https://boardyet.com',
+        'https://api.boardyet.com',
         
         // Legacy/test origins
         'https://api-test-board.com',
