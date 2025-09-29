@@ -4,21 +4,22 @@ namespace App\Http\Controllers;
 
 use Exception;
 use App\Application\Auth\Services\AuthService;
+use App\Application\PasswordReset\Services\PasswordResetService;
 use App\Application\User\Services\UserService;
 use App\Domain\Auth\Exceptions\InvalidCredentialsException;
 use App\Http\Requests\RegisterRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\QueryException;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
     public function __construct(
         private AuthService $authService,
-        private UserService $userService
+        private UserService $userService,
+        private PasswordResetService $passwordResetService
     ) {
     }
 
@@ -26,24 +27,27 @@ class AuthController extends Controller
     {
         try {
             $data = $request->validated();
-
             $authenticatedUser = $this->authService->register($data);
 
             return response()->json([
-                'message' => 'User created successfully',
-                ...$authenticatedUser->toArray(),
-            ]);
+                'success' => true,
+                'data' => $authenticatedUser->toArray(),
+                'message' => 'User created successfully'
+            ], 201);
         } catch (ValidationException $e) {
             return response()->json([
+                'success' => false,
                 'message' => 'Validation failed',
                 'errors' => $e->errors()
             ], 422);
         } catch (QueryException $e) {
             return response()->json([
+                'success' => false,
                 'message' => 'Database error occurred'
             ], 500);
         } catch (Exception $e) {
             return response()->json([
+                'success' => false,
                 'message' => 'An unexpected error occurred'
             ], 500);
         }
@@ -58,13 +62,18 @@ class AuthController extends Controller
             ]);
 
             $sessionData = $this->authService->loginWithSession($credentials, 7);
+            $responseData = $sessionData->getResponseData();
 
-            $response = response()->json($sessionData->getResponseData());
+            $response = response()->json([
+                'success' => true,
+                'data' => $responseData,
+                'message' => 'Login successful'
+            ], 200);
 
-            if (isset($sessionData->getResponseData()['token'])) {
+            if (isset($responseData['token'])) {
                 $response->cookie(
                     'board_yet_auth_token',
-                    $sessionData->getResponseData()['token'],
+                    $responseData['token'],
                     config('session.lifetime'),
                     config('session.path'),
                     config('session.domain'),
@@ -78,10 +87,12 @@ class AuthController extends Controller
             return $response;
         } catch (InvalidCredentialsException $e) {
             return response()->json([
+                'success' => false,
                 'message' => $e->getMessage()
             ], 401);
         } catch (ValidationException $e) {
             return response()->json([
+                'success' => false,
                 'message' => 'Validation failed',
                 'errors' => $e->errors()
             ], 422);
@@ -92,8 +103,8 @@ class AuthController extends Controller
             ]);
 
             return response()->json([
-                'message' => 'An unexpected error occurred',
-                'error' => $e->getMessage()
+                'success' => false,
+                'message' => 'An unexpected error occurred'
             ], 500);
         }
     }
@@ -105,6 +116,7 @@ class AuthController extends Controller
 
             if (!$user) {
                 return response()->json([
+                    'success' => false,
                     'message' => 'User not authenticated'
                 ], 401);
             }
@@ -119,6 +131,7 @@ class AuthController extends Controller
             ]);
 
             return response()->json([
+                'success' => false,
                 'message' => 'An unexpected error occurred'
             ], 500);
         }
@@ -136,7 +149,10 @@ class AuthController extends Controller
                 }
             }
 
-            $response = response()->json(['message' => 'Logged out successfully']);
+            $response = response()->json([
+                'success' => true,
+                'message' => 'Logged out successfully'
+            ], 200);
 
             $response->cookie(
                 'board_yet_auth_token',
@@ -158,8 +174,79 @@ class AuthController extends Controller
             ]);
 
             return response()->json([
+                'success' => false,
                 'message' => 'Logout failed'
             ], 500);
+        }
+    }
+
+    public function forgotPassword(Request $request): JsonResponse
+    {
+        try {
+            $data = $request->validate([
+                'email' => 'required|email|exists:users,email',
+            ]);
+
+            $this->passwordResetService->requestPasswordReset($data['email']);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Password reset link has been sent to your email address.'
+            ], 200);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (Exception $e) {
+            Log::error('Forgot password error: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An unexpected error occurred'
+            ], 500);
+        }
+    }
+
+    public function resetPassword(Request $request): JsonResponse
+    {
+        try {
+            $data = $request->validate([
+                'email' => 'required|email|exists:users,email',
+                'token' => 'required|string',
+                'password' => 'required|string|min:8|confirmed',
+            ]);
+
+            $this->passwordResetService->resetPassword(
+                $data['email'],
+                $data['token'],
+                $data['password']
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Password has been reset successfully'
+            ], 200);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (Exception $e) {
+            Log::error('Reset password error: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 400);
         }
     }
 }
