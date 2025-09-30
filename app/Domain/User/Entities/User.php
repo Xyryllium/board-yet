@@ -4,14 +4,17 @@ namespace App\Domain\User\Entities;
 
 class User
 {
+    /**
+     * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+     */
     public function __construct(
         public string $name,
         public string $email,
         public string $password,
         public ?int $userId = null,
+        public bool $emailVerified = false,
     ) {
     }
-
 
     public function getId(): int
     {
@@ -36,6 +39,11 @@ class User
         return $this->password;
     }
 
+    public function hasVerifiedEmail(): bool
+    {
+        return $this->emailVerified;
+    }
+
 
     public function toArray(): array
     {
@@ -43,6 +51,7 @@ class User
             'id'    => $this->userId,
             'name'  => $this->name,
             'email' => $this->email,
+            'email_verified' => $this->emailVerified,
         ];
     }
 }

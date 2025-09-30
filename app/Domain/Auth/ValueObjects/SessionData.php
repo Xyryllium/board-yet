@@ -25,6 +25,7 @@ class SessionData
                 'role' => $this->authenticatedUser->role?->role,
                 'organization_id' => $this->authenticatedUser->role?->organizationId,
                 'subdomain' => $this->authenticatedUser->subdomain,
+                'email_verified' => $this->authenticatedUser->emailVerified,
             ],
             'token' => $this->token->plainTextToken
         ];

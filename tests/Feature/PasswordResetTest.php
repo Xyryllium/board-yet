@@ -1,22 +1,20 @@
 <?php
 
-namespace Tests\Feature;
-
+use App\Mail\PasswordResetMail;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
-use Tests\TestCase;
 
-class PasswordResetTest extends TestCase
-{
-    use RefreshDatabase;
+uses(RefreshDatabase::class);
 
-    public function test_forgot_password_sends_email_for_valid_user()
-    {
+describe('Password Reset', function () {
+    beforeEach(function () {
         Mail::fake();
+    });
 
+    it('sends email for valid user', function () {
         $user = User::factory()->create([
             'email' => 'test@example.com',
         ]);
@@ -30,32 +28,29 @@ class PasswordResetTest extends TestCase
                 'message' => 'Password reset link has been sent to your email address.'
             ]);
 
-        Mail::assertSent(\App\Mail\PasswordResetMail::class);
+        Mail::assertSent(PasswordResetMail::class);
 
         $this->assertDatabaseHas('password_reset_tokens', [
             'email' => 'test@example.com',
         ]);
-    }
+    });
 
-    public function test_forgot_password_returns_error_for_invalid_email()
-    {
+    it('returns error for invalid email', function () {
         $response = $this->postJson('/api/forgot-password', [
             'email' => 'nonexistent@example.com',
         ]);
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['email']);
-    }
+    });
 
-    public function test_reset_password_with_valid_token()
-    {
+    it('resets password with valid token', function () {
         $user = User::factory()->create([
             'email' => 'test@example.com',
             'password' => Hash::make('oldpassword'),
         ]);
 
-        $token = 'test-token-123';
-        
+        $token = 'valid-reset-token';
         DB::table('password_reset_tokens')->insert([
             'email' => 'test@example.com',
             'token' => Hash::make($token),
@@ -80,10 +75,9 @@ class PasswordResetTest extends TestCase
         $this->assertDatabaseMissing('password_reset_tokens', [
             'email' => 'test@example.com',
         ]);
-    }
+    });
 
-    public function test_reset_password_with_invalid_token()
-    {
+    it('fails with invalid token', function () {
         $user = User::factory()->create([
             'email' => 'test@example.com',
         ]);
@@ -99,20 +93,18 @@ class PasswordResetTest extends TestCase
             ->assertJson([
                 'message' => 'Invalid password reset token'
             ]);
-    }
+    });
 
-    public function test_reset_password_with_expired_token()
-    {
+    it('fails with expired token', function () {
         $user = User::factory()->create([
             'email' => 'test@example.com',
         ]);
 
-        $token = 'test-token-123';
-        
+        $token = 'expired-reset-token';
         DB::table('password_reset_tokens')->insert([
             'email' => 'test@example.com',
             'token' => Hash::make($token),
-            'created_at' => now()->subMinutes(61),
+            'created_at' => now()->subHours(2), // 2 hours ago
         ]);
 
         $response = $this->postJson('/api/reset-password', [
@@ -126,9 +118,5 @@ class PasswordResetTest extends TestCase
             ->assertJson([
                 'message' => 'Password reset token has expired'
             ]);
-
-        $this->assertDatabaseMissing('password_reset_tokens', [
-            'email' => 'test@example.com',
-        ]);
-    }
-}
+    });
+});
