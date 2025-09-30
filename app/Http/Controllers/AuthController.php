@@ -115,14 +115,30 @@ class AuthController extends Controller
             ], 200);
 
             if (isset($responseData['token'])) {
+                $expiresIn = $responseData['expires_in'] ?? 3600;
+                $expiryMinutes = ceil($expiresIn / 60);
+                $expiryTimestamp = time() + $expiresIn;
+
                 $response->cookie(
                     'board_yet_auth_token',
                     $responseData['token'],
                     config('session.lifetime'),
                     config('session.path'),
                     config('session.domain'),
-                    true,
+                    config('session.secure'),
+                    config('session.http_only'),
                     false,
+                    config('session.same_site')
+                );
+
+                $response->cookie(
+                    'board_yet_token_expiry',
+                    (string)($expiryTimestamp * 1000),
+                    $expiryMinutes,
+                    config('session.path'),
+                    config('session.domain'),
+                    config('session.secure'),
+                    config('session.http_only'),
                     false,
                     config('session.same_site')
                 );
@@ -221,6 +237,7 @@ class AuthController extends Controller
                 ]);
 
                 $token = $user->currentAccessToken();
+
                 if ($token) {
                     $this->authService->logout($token->plainTextToken ?? '');
                 }
@@ -229,15 +246,26 @@ class AuthController extends Controller
                     'success' => true,
                     'message' => 'Logged out successfully'
                 ], 200)->cookie(
-                    'api_token',
+                    'board_yet_auth_token',
                     '',
                     -1,
-                    '/',
-                    null,
-                    true,
-                    true,
+                    config('session.path'),
+                    config('session.domain'),
+                    config('session.secure'),
+                    config('session.http_only'),
                     false,
-                    'None'
+                    config('session.same_site')
+                )
+                ->cookie(
+                    'board_yet_token_expiry',
+                    '',
+                    -1,
+                    config('session.path'),
+                    config('session.domain'),
+                    config('session.secure'),
+                    config('session.http_only'),
+                    false,
+                    config('session.same_site')
                 );
             }
 
@@ -253,12 +281,22 @@ class AuthController extends Controller
                 'board_yet_auth_token',
                 '',
                 -1,
-                '/',
+                config('session.path'),
                 config('session.domain'),
-                true,
+                config('session.secure'),
+                config('session.http_only'),
                 false,
+                config('session.same_site')
+            )->cookie(
+                'board_yet_token_expiry',
+                '',
+                -1,
+                config('session.path'),
+                config('session.domain'),
+                config('session.secure'),
+                config('session.http_only'),
                 false,
-                'strict'
+                config('session.same_site')
             );
         } catch (Exception $e) {
             Log::channel('auth')->error('Logout error: ' . $e->getMessage(), [
