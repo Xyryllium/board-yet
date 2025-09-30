@@ -128,9 +128,19 @@ return [
         ],
 
         'organization' => [
-            'driver' => 'single',
+            'driver' => 'daily',
             'path' => storage_path('logs/organization.log'),
-            'level' => 'debug',
+            'level' => env('LOG_LEVEL', 'info'),
+            'days' => env('ORGANIZATION_LOG_DAYS', 30),
+            'replace_placeholders' => true,
+        ],
+
+        'auth' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/auth.log'),
+            'level' => env('LOG_LEVEL', 'info'),
+            'days' => env('AUTH_LOG_DAYS', 30),
+            'replace_placeholders' => true,
         ],
 
     ],
