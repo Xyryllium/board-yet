@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 
                 $middleware->alias([
                     'org.scope' => \App\Http\Middleware\OrganizationScopeMiddleware::class,
+                    'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
                 ]);
             })
     ->withExceptions(function (Exceptions $exceptions): void {

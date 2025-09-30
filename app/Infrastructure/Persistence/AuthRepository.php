@@ -31,6 +31,7 @@ class AuthRepository implements AuthRepositoryInterface
             email: $eloquentUser->email,
             password: $eloquentUser->password,
             userId: $eloquentUser->id,
+            emailVerified: $eloquentUser->email_verified_at !== null,
         );
     }
 

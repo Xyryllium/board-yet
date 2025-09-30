@@ -51,6 +51,7 @@ class UserService
             'role' => $userRole?->role,
             'organization_id' => $currentOrganization?->organizationId,
             'subdomain' => $currentOrganization?->subdomain,
+            'email_verified' => $eloquentUser->email_verified_at !== null,
         ];
     }
 }

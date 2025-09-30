@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Events\EmailVerificationSent;
 use App\Events\OrganizationInvitationSent;
+use App\Listeners\SendEmailVerification;
 use App\Listeners\SendOrganizationInvitation;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
@@ -14,6 +16,9 @@ class EventServiceProvider extends ServiceProvider
      * @var array<class-string, array<int, class-string>>
      */
     protected $listen = [
+        EmailVerificationSent::class => [
+            SendEmailVerification::class,
+        ],
         OrganizationInvitationSent::class => [
             SendOrganizationInvitation::class,
         ],

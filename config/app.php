@@ -65,7 +65,7 @@ return [
     |
     */
 
-    'frontend_url' => env('VITE_APP_URL', 'http://localhost:3000'),
+    'frontend_url' => env('VITE_APP_URL', 'http://localhost:5173'),
 
     /*
     |--------------------------------------------------------------------------
