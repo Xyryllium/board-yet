@@ -3,6 +3,7 @@
 namespace App\Domain\Auth\Services;
 
 use Exception;
+use App\Events\EmailVerificationSent;
 use App\Domain\Auth\Entities\AuthenticatedUser;
 use App\Domain\Auth\Exceptions\InvalidCredentialsException;
 use App\Domain\Auth\Exceptions\TokenCreationException;
@@ -15,6 +16,7 @@ use App\Domain\User\Repositories\UserRepositoryInterface;
 use App\Domain\User\Services\UserRoleDomainService;
 use App\Domain\Organization\Repositories\OrganizationRepositoryInterface;
 use Illuminate\Contracts\Hashing\Hasher;
+use Illuminate\Support\Facades\Event;
 
 class AuthDomainService
 {
@@ -54,6 +56,7 @@ class AuthDomainService
             token: $token,
             role: $role,
             subdomain: $subdomain,
+            emailVerified: $user->hasVerifiedEmail(),
         );
     }
 
@@ -66,6 +69,8 @@ class AuthDomainService
         );
 
         $savedEloquentUser = $this->userRepository->save($user);
+
+        Event::dispatch(new EmailVerificationSent($savedEloquentUser));
 
         $savedUser = new User(
             name: $savedEloquentUser->name,

@@ -7,6 +7,9 @@ use App\Domain\Auth\ValueObjects\UserRole;
 
 class AuthenticatedUser
 {
+    /**
+     * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+     */
     public function __construct(
         public readonly int $userId,
         public readonly string $name,
@@ -14,6 +17,7 @@ class AuthenticatedUser
         public readonly Token $token,
         public readonly ?UserRole $role = null,
         public readonly ?string $subdomain = null,
+        public readonly bool $emailVerified = false,
     ) {
     }
 
@@ -47,6 +51,11 @@ class AuthenticatedUser
         return $this->role?->organizationId;
     }
 
+    public function isEmailVerified(): bool
+    {
+        return $this->emailVerified;
+    }
+
     public function toArray(): array
     {
         return [
@@ -57,6 +66,7 @@ class AuthenticatedUser
                 'role' => $this->role?->role,
                 'organization_id' => $this->role?->organizationId,
                 'subdomain' => $this->subdomain,
+                'email_verified' => $this->emailVerified,
             ],
             'token' => $this->token->plainTextToken,
         ];
